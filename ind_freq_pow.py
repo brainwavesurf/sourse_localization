@@ -22,36 +22,24 @@ isi_mag = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individua
 post_grad = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_post_grad.csv'
 isi_grad = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_isi_grad.csv'
 
-post_mag1 = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_post_mag_cluster.csv'
-isi_mag1 = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_isi_mag_cluster.csv'
-post_grad1 = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_post_grad_cluster.csv'
-isi_grad1 = '/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/individual_alpha_isi_grad_cluster.csv'
- 
-data_post_mag = pd.read_csv(post_mag, names=['slow_freq', 'medium_freq', 'fast_freq', 'slow_pow', 'medium_pow', 'fast_pow'])
-data_isi_mag = pd.read_csv(isi_mag, names=['slow_freq', 'medium_freq', 'fast_freq', 'slow_pow', 'medium_pow', 'fast_pow'])
-data_post_grad = pd.read_csv(post_grad, names=['slow_freq', 'medium_freq', 'fast_freq', 'slow_pow', 'medium_pow', 'fast_pow'])
-data_isi_grad = pd.read_csv(isi_grad, names=['slow_freq', 'medium_freq', 'fast_freq', 'slow_pow', 'medium_pow', 'fast_pow'])
+data_post_mag = pd.read_csv(post_mag, names=['slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast'])
+data_isi_mag = pd.read_csv(isi_mag, names=['slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast'])
+data_post_grad = pd.read_csv(post_grad, names=['slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast'])
+data_isi_grad = pd.read_csv(isi_grad, names=['slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast', 'slow', 'medium', 'fast'])
 
-data_post_mag1 = pd.read_csv(post_mag1, names=['cluster_slow_pow', 'cluster_medium_pow', 'cluster_fast_pow'])
-data_isi_mag1 = pd.read_csv(isi_mag1, names=['cluster_slow_pow', 'cluster_medium_pow', 'cluster_fast_pow'])
-data_post_grad1 = pd.read_csv(post_grad1, names=['cluster_slow_pow', 'cluster_medium_pow', 'cluster_fast_pow'])
-data_isi_grad1 = pd.read_csv(isi_grad1, names=['cluster_slow_pow', 'cluster_medium_pow', 'cluster_fast_pow'])
-
-frames = [list_subj, group, data_post_mag, data_post_mag1]
+frames = [list_subj, group, data_post_mag]
 result1 = pd.concat(frames, axis=1, sort=False)
-result1['cluster_fast_pow'].map(lambda x: '{:.2e}' % x)
-result1['cluster_fast_pow']*
-frames = [list_subj, group, data_isi_mag, data_isi_mag1]
+
+frames = [list_subj, group, data_isi_mag]
 result2 = pd.concat(frames, axis=1, sort=False)
 
-frames = [list_subj, group, data_post_grad, data_post_grad1]
+frames = [list_subj, group, data_post_grad]
 result3 = pd.concat(frames, axis=1, sort=False)
 
-frames = [list_subj, group, data_isi_grad, data_isi_grad1]
+frames = [list_subj, group, data_isi_grad]
 result4 = pd.concat(frames, axis=1, sort=False)
 
 result1.to_excel("/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/data_post_mag.xlsx") 
 result2.to_excel("/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/data_isi_mag.xlsx") 
 result3.to_excel("/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/data_post_grad.xlsx") 
 result4.to_excel("/home/a_shishkina/data/KI/Results_Alpha_and_Gamma/1_results/data_isi_grad.xlsx")  
-
