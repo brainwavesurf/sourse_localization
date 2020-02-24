@@ -4,7 +4,8 @@ from mne import io
 from mne.beamformer import make_lcmv, apply_lcmv_epochs
 import numpy as np
 from mne.time_frequency import psd_array_welch
-import matplotlib.pyplot as plt
+from mne.minimum_norm import make_inverse_operator, apply_inverse_epochs
+
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -80,8 +81,8 @@ for subject in SUBJECTS:
     data_cov_fast = mne.compute_covariance(fast_csp1_epo, method='shrinkage', rank=None)
     data_cov_slow = mne.compute_covariance(slow_csp1_epo, method='shrinkage', rank=None)
     
-    fig_cov, fig_spectra = mne.viz.plot_cov(data_cov_fast, raw.info)
-    fig_cov, fig_spectra = mne.viz.plot_cov(data_cov_slow, raw.info)
+    #fig_cov, fig_spectra = mne.viz.plot_cov(noise_cov_fast, raw.info)
+    #fig_cov, fig_spectra = mne.viz.plot_cov(data_cov_slow, raw.info)
     
     #provide analysis for selected labels
     labs = mne.read_labels_from_annot('Case'+subject, parc='aparc', subjects_dir=subjects_dir)
@@ -110,11 +111,13 @@ for subject in SUBJECTS:
     V_csp_fast = []
     V_csp_slow = []
     
-    stc = [stc_csp1_fast, stc_csp1_slow]
+    stc_fast = [stc_csp1_fast]
+    stc_slow = [stc_csp1_slow]
 
-    for s in stc:
+    for s in stc_fast:
         temp = [element.data for element in s]
         V_csp_fast.append(np.stack(temp))
+    for s in stc_slow:    
         temp = [element.data for element in s]
         V_csp_slow.append(np.stack(temp))
     
@@ -126,8 +129,36 @@ for subject in SUBJECTS:
     psds_av_slow = psds_slow.mean(axis=0)
     
     #calculate normalized spectral power
-    CSP1_power = (psds_av_fast - psds_av_slow)/psds_av_slow
+    CSP1_power = psds_av_fast - psds_av_slow
     
-    maxes_ind = np.argmax(np.max(CSP1_power))
+    maxes_ind = np.argmax(CSP1_power[:,:])
     #find max values among 41-80 Hz and get 26 which come first
-    Vmax_voxels_num = np.argsort(np.max(CSP1_power[maxes_ind], axis=1))[-26:] #order numbers of 26 max voxels
+    Vmax_voxels_num = np.argsort(CSP1_power[maxes_ind])[-26:] #order numbers of 26 max voxels
+    
+    #find max values among 41-80 Hz and get 26 which come first
+    Vmax_voxels_num.sort() #sorted from min to max
+    
+    #get 'names' of 26 max vertices that are in lh and in rh
+    q = stc_csp1_fast[0]
+    Vmax_voxels_num_lh = Vmax_voxels_num[Vmax_voxels_num<len(q.lh_vertno)] #order numbers of 26 max voxels (left hemi)
+    Vmax_voxels_num_rh = Vmax_voxels_num[Vmax_voxels_num>=len(q.lh_vertno)] #order numbers of 26 max voxels (right hemi)
+    
+    #get 'names' of all vertices in lh and rh
+    lh_vox_num = stc_csp1_fast_av.lh_vertno #'names' of all left hemi voxels
+    rh_vox_num = stc_csp1_fast_av.rh_vertno #'names' of all right hemi voxels
+    
+    CSP1_power_rh = np.max(CSP1_power[maxes_ind][Vmax_voxels_num_rh], axis=0) #rh data of 26 max voxels
+    CSP1_power_lh = np.max(CSP1_power[maxes_ind][Vmax_voxels_num_lh], axis=1) #lh data of 26 max voxels
+    
+    #combine 'names' of left and right hemi voxels to get names of our 26 max voxels:
+    vox_num = np.hstack([lh_vox_num, rh_vox_num])
+    #now get 'names' of our 26 max voxels:
+    vox_num_26 = vox_num[Vmax_voxels_num] #our 26 'names'
+    
+    #sourse estimation for the whole brain; lh - first, rh - second
+    stc_my = mne.SourceEstimate(CSP1_power, [stc_csp1_fast_av.lh_vertno, stc_csp1_fast_av.rh_vertno], tmin=-0.8, tstep=stc_csp1_fast_av.tstep, subject=subject)
+    
+    hemis = ['lh', 'rh']
+    for he in hemis:
+    	brain = stc_my.plot(hemi=he, subjects_dir=subjects_dir,  clim=dict(kind='value', lims=[0, CSP1_power.max()/2, CSP1_power.max()]))
+    
