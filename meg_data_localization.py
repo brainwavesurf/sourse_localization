@@ -8,17 +8,13 @@ Created on Thu Feb 27 17:19:17 2020
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import matplotlib 
+#import matplotlib 
 #get_ipython().run_line_magic('matplotlib', 'inline')
-matplotlib .use('TKAgg') 
+#matplotlib .use('TKAgg') 
 #import packages
 import mne
 from mne import io
-from mne.beamformer import make_lcmv, apply_lcmv_epochs
-import numpy as np
-from mne.time_frequency import psd_array_welch
-from mne.minimum_norm import make_inverse_operator, apply_inverse_epochs, source_band_induced_power, compute_source_psd_epochs
-import  matplotlib.pyplot as plt
+from mne.minimum_norm import make_inverse_operator, compute_source_psd_epochs
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -33,6 +29,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
 #File "/net/server/data/Archive/aut_gamma/orekhova/KI/freesurfersubjects/Case0107/bem/inner_skull.surf" does not exist
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
+SUBJECTS = ['0106']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -112,7 +109,7 @@ for subject in SUBJECTS:
     n_epochs_use = epo_post_fast.events.shape[0]
     stcs_post_fast = compute_source_psd_epochs(epo_post_fast[:n_epochs_use], inverse_operator_post_fast,
                                  lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
+                                 method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -140,7 +137,7 @@ for subject in SUBJECTS:
     n_epochs_use = epo_post_slow.events.shape[0]
     stcs_post_slow = compute_source_psd_epochs(epo_post_slow[:n_epochs_use], inverse_operator_post_slow,
                                  lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
+                                 method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -152,25 +149,31 @@ for subject in SUBJECTS:
 
     #subtract "baseline" (stimulation period) from interstimulus data 
     stc_fast = stc_isi_fast
-    stc_fast.data = (stc_isi_fast.data - stc_post_fast.data)/stc_post_slow.data  
+    stc_fast.data = abs(stc_isi_fast.data - stc_post_fast.data)/stc_post_fast.data  
     
     stc_slow = stc_isi_slow
-    stc_slow.data = (stc_isi_slow.data - stc_post_slow)/stc_post_fast.data
+    stc_slow.data = abs(stc_isi_slow.data - stc_post_slow.data)/stc_post_slow.data
     
     #plot
-    medium = (np.max(stc_fast.data[:,3]))/2
-    maxim = np.max(stc_fast.data[:,3])
-    brain_fast = stc_fast.plot(subject='Case'+subject, initial_time=14.9626, hemi='both', views='caud',  # 10 HZ
-                 clim=dict(kind='value', lims=(0, medium, maxim)), subjects_dir=subjects_dir)
-    brain_fast.save_image(savepath + subject + '/' + subject + 'isi_post_fast.png')
-    del brain_fast
+#    medium = (np.max(stc_fast.data[:,3]))/2
+#    maxim = np.max(stc_fast.data[:,3])
+#    brain_fast = stc_fast.plot(subject='Case'+subject, initial_time=14.9626, hemi='both', views='caud',  # 10 HZ
+#                 clim=dict(kind='value', lims=(0, medium, maxim)), subjects_dir=subjects_dir)
+#    brain_fast.save_image(savepath + subject + '/' + subject + 'isi_post_fast.png')
+#    del brain_fast
+#    
+#    medium = (np.max(stc_slow.data[:,3]))/2
+#    maxim = np.max(stc_slow.data[:,3])
+#    brain_slow = stc_slow.plot(subject='Case'+subject, initial_time=14.9626, hemi='both', views='caud',  # 10 HZ
+#                 clim=dict(kind='value', lims=(0, medium, maxim)), subjects_dir=subjects_dir) 
+#    time_viewer = True
+#    brain_slow.save_image(savepath + subject + '/' + subject + 'isi_post_slow.png')
+#    del brain_slow
     
-    medium = (np.max(stc_slow.data[:,3]))/2
-    maxim = np.max(stc_slow.data[:,3])
-    brain_slow = stc_slow.plot(subject='Case'+subject, initial_time=14.9626, hemi='both', views='caud',  # 10 HZ
-                 clim=dict(kind='value', lims=(0, medium, maxim)), subjects_dir=subjects_dir)
-    
-    #time_viewer = True
-    brain_slow.save_image(savepath + subject + '/' + subject + 'isi_post_slow.png')
-    del brain_slow
-    
+    #save
+    stc_isi_slow.save(savepath + subject + '/' + subject + 'isi_slow')
+    stc_isi_fast.save(savepath + subject + '/' + subject + 'isi_fast')
+    stc_post_slow.save(savepath + subject + '/' + subject + 'post_slow')
+    stc_post_fast.save(savepath + subject + '/' + subject + 'post_fast')
+    stc_fast.save(savepath + subject + '/' + subject + 'fast')
+    stc_slow.save(savepath + subject + '/' + subject + 'slow')
