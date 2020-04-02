@@ -8,7 +8,6 @@ Created on Wed Apr  1 11:58:55 2020
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#import matplotlib 
 #get_ipython().run_line_magic('matplotlib', 'inline')
 #matplotlib .use('TKAgg') 
 #import packages
@@ -60,7 +59,7 @@ for subject in SUBJECTS:
     original_info = original_data.info
     
     #for 6 CSP components
-    CSP = ['1','2','3','4','5','6']
+    CSP = ['1','2','3']
     for num in CSP:
         
         #load csp data for CSP1 fast from fieldtrip
@@ -79,8 +78,9 @@ for subject in SUBJECTS:
         #calculate noise covariance matrix from empty room data
         raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
         raw_noise = io.read_raw_fif(raw_fname, preload=True)
-        raw_noise.filter(2, 40, fir_design='firwin') 
-        noise_cov = mne.compute_raw_covariance(raw_noise, method='shrinkage')
+        raw_noise.filter(10, 17, fir_design='firwin') 
+        methods = ['shrunk', 'empirical']
+        noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
         
         #inverse operator
         inverse_operator_fast = make_inverse_operator(fast_epo.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
@@ -90,7 +90,7 @@ for subject in SUBJECTS:
         snr = 3.
         #lambda2 = 0.05
         lambda2 = 1. / snr ** 2
-        bandwidth =  4.0
+        bandwidth = 'hann'
     
         #for fast csp
         n_epochs_use = fast_epo.events.shape[0]
