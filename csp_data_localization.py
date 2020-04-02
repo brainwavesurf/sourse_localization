@@ -25,8 +25,6 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0276', '0346', '0347', '0351', '0358', 
             '0380', '0381', '0382', '0383'] 
 
-#File "/net/server/data/Archive/aut_gamma/orekhova/KI/freesurfersubjects/Case0107/bem/inner_skull.surf" does not exist
-
 SUBJECTS = SUBJ_ASD + SUBJ_NT
 SUBJECTS = ['0106']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
@@ -51,25 +49,23 @@ for subject in SUBJECTS:
     src = mne.setup_source_space('Case' + subject, spacing='oct6', subjects_dir=subjects_dir, add_dist=False)
     #make forward solution
     fwd = mne.make_forward_solution(raw_fname, trans=trans, src=src, bem=bem, meg=True, eeg=False, mindist=5.0, n_jobs=2)
-    del bem, src
-    #download 2-40 Hz filtered data from fieldtrip
-    #ftname = savepath + subject + '/' + subject + '_preproc_alpha_2_40_epochs.mat' 
+    del bem, src 
     
     original_data = mne.io.read_raw_fif(raw_fname, preload=False)
     original_info = original_data.info
     
-    #for 6 CSP components
+    #for 3 CSP components
     CSP = ['1','2','3']
     for num in CSP:
         
-        #load csp data for CSP1 fast from fieldtrip
+        #load csp data for fast from fieldtrip
         ftname = savepath + subject + '/' + subject + '_fieldtrip_csp.mat'
         fast_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='epochs_fast'+num, trialinfo_column=0)
         fast_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif', overwrite=True)
         fast_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif'
         fast_epo = mne.read_epochs(fast_fname, proj=False, verbose=None) 
         
-        #load csp data for CSP1 slow from fieldtrip
+        #load csp data for slow from fieldtrip
         slow_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='epochs_slow'+num, trialinfo_column=0)
         slow_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_slow.fif', overwrite=True)
         slow_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_slow.fif'
@@ -88,7 +84,6 @@ for subject in SUBJECTS:
        
         method = "sLORETA"
         snr = 3.
-        #lambda2 = 0.05
         lambda2 = 1. / snr ** 2
         bandwidth = 'hann'
     
@@ -106,7 +101,7 @@ for subject in SUBJECTS:
         freqs = stc_fast.times  # the frequencies are stored here
         stc_fast.data = psd_avg  
 
-        #for fast csp
+        #for slow csp
         n_epochs_use = slow_epo.events.shape[0]
         stcs_slow = compute_source_psd_epochs(slow_epo[:n_epochs_use], inverse_operator_slow,
                                      lambda2=lambda2,
