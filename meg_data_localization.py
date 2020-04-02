@@ -26,8 +26,6 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0276', '0346', '0347', '0351', '0358', 
             '0380', '0381', '0382', '0383'] 
 
-#File "/net/server/data/Archive/aut_gamma/orekhova/KI/freesurfersubjects/Case0107/bem/inner_skull.surf" does not exist
-
 SUBJECTS = SUBJ_ASD + SUBJ_NT
 SUBJECTS = ['0106']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
@@ -56,103 +54,183 @@ for subject in SUBJECTS:
     #download 2-40 Hz filtered data from fieldtrip
     #ftname = savepath + subject + '/' + subject + '_preproc_alpha_2_40_epochs.mat'
     
-    #raw epochs case
-    fif_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-noerror-lagcorrected-epo.fif'
-    #interstimulus epochs
-    epo_isi = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_isi.crop(tmin=-0.8, tmax=0)
-    epo_isi_slow = epo_isi["V1"]
-    epo_isi_fast = epo_isi["V3"]
+#    #raw epochs case
+#    fif_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-noerror-lagcorrected-epo.fif'
+#    #interstimulus epochs
+#    epo_isi = mne.read_epochs(fif_fname, proj=False, verbose=None) 
+#    epo_isi.crop(tmin=-0.8, tmax=0)
+#    epo_isi_slow = epo_isi["V1"]
+#    epo_isi_fast = epo_isi["V3"]
+#    
+#    #stimulation epochs
+#    epo_post = mne.read_epochs(fif_fname, proj=False, verbose=None) 
+#    epo_post.crop(tmin=0.4, tmax=1.2)
+#    epo_post_slow = epo_post["V1"]
+#    epo_post_fast = epo_post["V3"]
     
-    #stimulation epochs
-    epo_post = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_post.crop(tmin=0.4, tmax=1.2)
-    epo_post_slow = epo_post["V1"]
-    epo_post_fast = epo_post["V3"]
+    original_data = mne.io.read_raw_fif(raw_fname, preload=False)
+    original_info = original_data.info
     
+    #load slow epochs from fieldtrip
+    ftname = savepath + subject + '/' + subject + '_preproc_epochs_2_40.mat'
+    slow_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='slow_epochs', trialinfo_column=0)
+    slow_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'slow_epo.fif', overwrite=True)
+    slow_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'slow_epo.fif'
+    #slow condition in interstimulus
+    slow_epo_isi = mne.read_epochs(slow_fname, proj=False, verbose=None) 
+    slow_epo_isi.crop(tmin=-0.8, tmax=0)
+    #slow condition in stimulation
+    slow_epo_post = mne.read_epochs(slow_fname, proj=False, verbose=None) 
+    slow_epo_post.crop(tmin=0.4, tmax=1.2)
+    
+    #load medium epochs from fieldtrip
+    ftname = savepath + subject + '/' + subject + '_preproc_epochs_2_40.mat'
+    medium_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='medium_epochs', trialinfo_column=0)
+    medium_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'medium_epo.fif', overwrite=True)
+    medium_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'medium_epo.fif'
+    #medium condition in interstimulus
+    medium_epo_isi = mne.read_epochs(medium_fname, proj=False, verbose=None) 
+    medium_epo_isi.crop(tmin=-0.8, tmax=0)
+    #medium condition in stimulation
+    medium_epo_post = mne.read_epochs(medium_fname, proj=False, verbose=None) 
+    medium_epo_post.crop(tmin=0.4, tmax=1.2)
+    
+    #load fast epochs from fieldtrip
+    ftname = savepath + subject + '/' + subject + '_preproc_epochs_2_40.mat'
+    fast_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='fast_epochs', trialinfo_column=0)
+    fast_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'fast_epo.fif', overwrite=True)
+    fast_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + 'fast_epo.fif'
+    #fast condition in interstimulus
+    fast_epo_isi = mne.read_epochs(fast_fname, proj=False, verbose=None) 
+    fast_epo_isi.crop(tmin=-0.8, tmax=0)
+    #fast condition in stimulation
+    fast_epo_post = mne.read_epochs(fast_fname, proj=False, verbose=None) 
+    fast_epo_post.crop(tmin=0.4, tmax=1.2)
+    
+
 
     #calculate noise covariance matrix from empty room data
     raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
     raw_noise = io.read_raw_fif(raw_fname, preload=True)
     raw_noise.filter(2, 40, fir_design='firwin') 
-    noise_cov = mne.compute_raw_covariance(raw_noise, method='shrinkage')
+    noise_cov = mne.compute_raw_covariance(raw_noise, method='empirical', rank=None)
+    #methods = ['shrunk', 'empirical']
+    #noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, return_estimators=True)
+    #rank = mne.compute_rank(noise_cov[0], info = raw_noise.info)
+    #fig1, fig2 = noise_cov[0].plot(raw_noise.info)
     
     #slow
-    inverse_operator_isi_slow = make_inverse_operator(epo_isi_slow.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-    inverse_operator_post_slow = make_inverse_operator(epo_post_slow.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    inverse_operator_slow_isi = make_inverse_operator(slow_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    inverse_operator_slow_post = make_inverse_operator(slow_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
    
+    #medium
+    inverse_operator_medium_isi = make_inverse_operator(medium_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    inverse_operator_medium_post = make_inverse_operator(medium_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+       
     #fast
-    inverse_operator_isi_fast = make_inverse_operator(epo_isi_fast.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-    inverse_operator_post_fast = make_inverse_operator(epo_post_fast.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-      
+    inverse_operator_fast_isi = make_inverse_operator(fast_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    inverse_operator_fast_post = make_inverse_operator(fast_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    
     method = "sLORETA"
     snr = 3.
     #lambda2 = 0.05
     lambda2 = 1. / snr ** 2
     bandwidth =  4.0
-
-    #for fast interstimulus epochs
-    n_epochs_use = epo_isi_fast.events.shape[0]
-    stcs_isi_fast = compute_source_psd_epochs(epo_isi_fast[:n_epochs_use], inverse_operator_isi_fast,
-                                 lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_isi_fast in enumerate(stcs_isi_fast):
-        psd_avg += stc_isi_fast.data
-    psd_avg /= n_epochs_use
-    freqs = stc_isi_fast.times  # the frequencies are stored here
-    stc_isi_fast.data = psd_avg  
-
-    #for fast stimulation period epochs
-    n_epochs_use = epo_post_fast.events.shape[0]
-    stcs_post_fast = compute_source_psd_epochs(epo_post_fast[:n_epochs_use], inverse_operator_post_fast,
-                                 lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_post_fast in enumerate(stcs_post_fast):
-        psd_avg += stc_post_fast.data
-    psd_avg /= n_epochs_use
-    freqs = stc_post_fast.times  # the frequencies are stored here
-    stc_post_fast.data = psd_avg
-#    
+    
     #for slow interstimulus epochs
-    n_epochs_use = epo_isi_slow.events.shape[0]
-    stcs_isi_slow = compute_source_psd_epochs(epo_isi_slow[:n_epochs_use], inverse_operator_isi_slow,
+    n_epochs_use = slow_epo_isi.events.shape[0]
+    stcs_slow_isi = compute_source_psd_epochs(slow_epo_isi[:n_epochs_use], inverse_operator_slow_isi,
                                  lambda2=lambda2,
                                  method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
-    for i, stc_isi_slow in enumerate(stcs_isi_slow):
-        psd_avg += stc_isi_slow.data
+    for i, stc_slow_isi in enumerate(stcs_slow_isi):
+        psd_avg += stc_slow_isi.data
     psd_avg /= n_epochs_use
-    freqs = stc_isi_slow.times  # the frequencies are stored here
-    stc_isi_slow.data = psd_avg  
+    freqs = stc_slow_isi.times  # the frequencies are stored here
+    stc_slow_isi.data = psd_avg  
 
     #for slow stimulation period epochs
-    n_epochs_use = epo_post_slow.events.shape[0]
-    stcs_post_slow = compute_source_psd_epochs(epo_post_slow[:n_epochs_use], inverse_operator_post_slow,
+    n_epochs_use = slow_epo_post.events.shape[0]
+    stcs_slow_post = compute_source_psd_epochs(slow_epo_post[:n_epochs_use], inverse_operator_slow_post,
                                  lambda2=lambda2,
                                  method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
-    for i, stc_post_slow in enumerate(stcs_post_slow):
-        psd_avg += stc_post_slow.data
+    for i, stc_slow_post in enumerate(stcs_slow_post):
+        psd_avg += stc_slow_post.data
     psd_avg /= n_epochs_use
-    freqs = stc_post_slow.times  # the frequencies are stored here
-    stc_post_slow.data = psd_avg
+    freqs = stc_slow_post.times  # the frequencies are stored here
+    stc_slow_post.data = psd_avg 
 
-    #subtract "baseline" (stimulation period) from interstimulus data 
-    stc_fast = stc_isi_fast
-    stc_fast.data = abs(stc_isi_fast.data - stc_post_fast.data)/stc_post_fast.data  
+    #for medium interstimulus epochs
+    n_epochs_use = medium_epo_isi.events.shape[0]
+    stcs_medium_isi = compute_source_psd_epochs(medium_epo_isi[:n_epochs_use], inverse_operator_medium_isi,
+                                 lambda2=lambda2,
+                                 method=method, fmin=2, fmax=40,
+                                 bandwidth=bandwidth,
+                                 return_generator=True, verbose=True)
+    psd_avg = 0.
+    for i, stc_medium_isi in enumerate(stcs_medium_isi):
+        psd_avg += stc_medium_isi.data
+    psd_avg /= n_epochs_use
+    freqs = stc_medium_isi.times  # the frequencies are stored here
+    stc_medium_isi.data = psd_avg
+
+    #for medium stimulation period epochs
+    n_epochs_use = medium_epo_post.events.shape[0]
+    stcs_medium_post = compute_source_psd_epochs(medium_epo_post[:n_epochs_use], inverse_operator_medium_post,
+                                 lambda2=lambda2,
+                                 method=method, fmin=2, fmax=40,
+                                 bandwidth=bandwidth,
+                                 return_generator=True, verbose=True)
+    psd_avg = 0.
+    for i, stc_medium_post in enumerate(stcs_medium_post):
+        psd_avg += stc_medium_post.data
+    psd_avg /= n_epochs_use
+    freqs = stc_medium_post.times  # the frequencies are stored here
+    stc_medium_post.data = psd_avg 
     
-    stc_slow = stc_isi_slow
-    stc_slow.data = abs(stc_isi_slow.data - stc_post_slow.data)/stc_post_slow.data
+    #for fast interstimulus epochs
+    n_epochs_use = fast_epo_isi.events.shape[0]
+    stcs_fast_isi = compute_source_psd_epochs(fast_epo_isi[:n_epochs_use], inverse_operator_fast_isi,
+                                 lambda2=lambda2,
+                                 method=method, fmin=2, fmax=40,
+                                 bandwidth=bandwidth,
+                                 return_generator=True, verbose=True)
+    psd_avg = 0.
+    for i, stc_fast_isi in enumerate(stcs_fast_isi):
+        psd_avg += stc_fast_isi.data
+    psd_avg /= n_epochs_use
+    freqs = stc_fast_isi.times  # the frequencies are stored here
+    stc_fast_isi.data = psd_avg
+
+    #for fast stimulation period epochs
+    n_epochs_use = fast_epo_post.events.shape[0]
+    stcs_fast_post = compute_source_psd_epochs(fast_epo_post[:n_epochs_use], inverse_operator_fast_post,
+                                 lambda2=lambda2,
+                                 method=method, fmin=2, fmax=40,
+                                 bandwidth=bandwidth,
+                                 return_generator=True, verbose=True)
+    psd_avg = 0.
+    for i, stc_fast_post in enumerate(stcs_fast_post):
+        psd_avg += stc_fast_post.data
+    psd_avg /= n_epochs_use
+    freqs = stc_fast_post.times  # the frequencies are stored here
+    stc_fast_post.data = psd_avg 
+
+
+    #subtract "baseline" (stimulation period) from interstimulus data  
+    stc_slow = stc_slow_isi
+    stc_slow.data = abs(stc_slow_isi.data - stc_slow_post.data)/stc_slow_post.data  
+    
+    stc_medium = stc_medium_isi
+    stc_medium.data = abs(stc_medium_isi.data - stc_medium_post.data)/stc_medium_post.data  
+    
+    stc_fast = stc_fast_isi
+    stc_fast.data = abs(stc_fast_isi.data - stc_fast_post.data)/stc_fast_post.data  
     
     #plot
 #    medium = (np.max(stc_fast.data[:,3]))/2
@@ -171,9 +249,6 @@ for subject in SUBJECTS:
 #    del brain_slow
     
     #save
-    stc_isi_slow.save(savepath + subject + '/' + subject + 'isi_slow')
-    stc_isi_fast.save(savepath + subject + '/' + subject + 'isi_fast')
-    stc_post_slow.save(savepath + subject + '/' + subject + 'post_slow')
-    stc_post_fast.save(savepath + subject + '/' + subject + 'post_fast')
-    stc_fast.save(savepath + subject + '/' + subject + 'fast')
-    stc_slow.save(savepath + subject + '/' + subject + 'slow')
+    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow')
+    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium')
+    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast')
