@@ -16,6 +16,8 @@ import mne
 from mne import io
 from mne.minimum_norm import make_inverse_operator, compute_source_psd_epochs
 import scipy.io
+import numpy as np
+
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
            '0140', '0158', '0162', '0163', '0178', '0179', '0255', '0257', '0348', 
@@ -27,7 +29,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0380', '0381', '0382', '0383'] 
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
-SUBJECTS = ['0106']
+SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -51,17 +53,38 @@ for subject in SUBJECTS:
     #make forward solution
     fwd = mne.make_forward_solution(raw_fname, trans=trans, src=src, bem=bem, meg=True, eeg=False, mindist=5.0, n_jobs=2)
     del bem, src
-        
-    #raw epochs case
-    fif_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-noerror-lagcorrected-epo.fif'
+     
+    #make epochs from raw    
+    raw = io.Raw(raw_fname, preload=True)
+    raw.filter(2, 40)
+    #events
+    events= mne.find_events(raw, stim_channel='STI101', verbose=True, shortest_event=1)
+    delay = 8 
+    events[:,0] = events[:,0]+delay/1000.*raw.info['sfreq']
+    ev = np.sort(np.concatenate(( np.where(events[:,2]==2), np.where(events[:,2]==4), np.where(events[:,2]==8)), axis=1))  
+    relevantevents = events[ev,:][0]
+    #extract epochs from raw
+    events_id = dict(V1=2, V2=4, V3=8)
+    presim_sec = -1.
+    poststim_sec = 1.4
+    allepochs = mne.Epochs(raw, relevantevents, events_id, tmin=presim_sec, tmax=poststim_sec, baseline=(None, 0), proj=False, preload=True)
+    if raw.info['sfreq'] == 1000.:
+        allepochs.decimate(2, copy=None)
+    #save fif file
+    fif_fname =  PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-filtered-lagcorrected-epo.fif'
+    allepochs.save(fif_fname, overwrite=True) 
     
+    #raw epochs case
+#    fif_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-noerror-lagcorrected-epo.fif'
+#    
     #load info about preceding events
-    info_mat = scipy.io.loadmat(savepath + subject + '/' + subject + '_info.mat')
-    info_file = info_mat['allinfo']['prev_stim_type'][0][0][0]
+    info_mat = scipy.io.loadmat(PATHfrom + 'Results_Alpha_and_Gamma/'+ subject + '/' + subject + '_info.mat')
+    good_epo = info_mat['ALLINFO']['ep_order_num'][0][0][0]-1
+    info_file = info_mat['ALLINFO']['stim_type_previous_tr'][0][0][0]
     
     #interstimulus epochs
     epo_isi = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_isi.filter(2,40)
+    epo_isi.events = epo_isi.events[good_epo]
     epo_isi.events[:,2] = info_file
     epo_isi.crop(tmin=-0.8, tmax=0)
     slow_epo_isi = epo_isi.__getitem__('V1')
@@ -70,7 +93,7 @@ for subject in SUBJECTS:
 
     #stimulation epochs
     epo_post = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_post.filter(2,40)
+    epo_post.events = epo_post.events[good_epo]
     epo_post.events[:,2] = info_file
     epo_post.crop(tmin=0.4, tmax=1.2)
     slow_epo_post = epo_post.__getitem__('V1')
@@ -98,7 +121,7 @@ for subject in SUBJECTS:
     snr = 3.
     #lambda2 = 0.05
     lambda2 = 1. / snr ** 2
-    bandwidth =  4.0
+    bandwidth = 'hann'
     
     #for slow interstimulus epochs
     n_epochs_use = slow_epo_isi.events.shape[0]
