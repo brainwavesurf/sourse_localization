@@ -104,6 +104,7 @@ for subject in SUBJECTS:
     raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
     raw_noise = io.read_raw_fif(raw_fname, preload=True)
     raw_noise.filter(2, 40, fir_design='firwin') 
+    #raw_noise.filter(10, 17, fir_design='firwin') 
     methods = ['shrunk', 'empirical']
     noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
     
@@ -216,8 +217,15 @@ for subject in SUBJECTS:
     
     stc_fast = stc_fast_isi
     stc_fast.data = (stc_fast_isi.data - stc_fast_post.data)/stc_fast_post.data  
-      
+    
+    #scales for plots
+    medium_slow = (np.max(stc_slow.data[:,1]))/2
+    maxim_slow = np.max(stc_slow.data[:,1])
     #save
-    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow')
-    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium')
-    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast')
+    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow_2_40Hz')
+    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium_2_40Hz')
+    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast_2_40Hz')
+    
+#    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow_10_17Hz')
+#    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium_10_17Hz')
+#    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast_10_17Hz')
