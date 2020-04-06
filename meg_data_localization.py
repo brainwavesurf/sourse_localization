@@ -29,7 +29,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0380', '0381', '0382', '0383'] 
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
-SUBJECTS = ['0102']
+#SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -74,9 +74,6 @@ for subject in SUBJECTS:
     fif_fname =  PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-filtered-lagcorrected-epo.fif'
     allepochs.save(fif_fname, overwrite=True) 
     
-    #raw epochs case
-#    fif_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-noerror-lagcorrected-epo.fif'
-#    
     #load info about preceding events
     info_mat = scipy.io.loadmat(PATHfrom + 'Results_Alpha_and_Gamma/'+ subject + '/' + subject + '_info.mat')
     good_epo = info_mat['ALLINFO']['ep_order_num'][0][0][0]-1
@@ -104,19 +101,12 @@ for subject in SUBJECTS:
     raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
     raw_noise = io.read_raw_fif(raw_fname, preload=True)
     raw_noise.filter(2, 40, fir_design='firwin') 
-    #raw_noise.filter(10, 17, fir_design='firwin') 
+    raw_noise.crop(0, 80)
     methods = ['shrunk', 'empirical']
     noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
     
-    #slow
-    inverse_operator_slow_isi = make_inverse_operator(slow_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-    inverse_operator_slow_post = make_inverse_operator(slow_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)  
-    #medium
-    inverse_operator_medium_isi = make_inverse_operator(medium_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-    inverse_operator_medium_post = make_inverse_operator(medium_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)      
-    #fast
-    inverse_operator_fast_isi = make_inverse_operator(fast_epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-    inverse_operator_fast_post = make_inverse_operator(fast_epo_post.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    #inverse operator
+    inverse_operator = make_inverse_operator(epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
     
     method = "sLORETA"
     snr = 3.
@@ -126,7 +116,7 @@ for subject in SUBJECTS:
     
     #for slow interstimulus epochs
     n_epochs_use = slow_epo_isi.events.shape[0]
-    stcs_slow_isi = compute_source_psd_epochs(slow_epo_isi[:n_epochs_use], inverse_operator_slow_isi,
+    stcs_slow_isi = compute_source_psd_epochs(slow_epo_isi[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
                                  method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
@@ -140,7 +130,7 @@ for subject in SUBJECTS:
 
     #for slow stimulation period epochs
     n_epochs_use = slow_epo_post.events.shape[0]
-    stcs_slow_post = compute_source_psd_epochs(slow_epo_post[:n_epochs_use], inverse_operator_slow_post,
+    stcs_slow_post = compute_source_psd_epochs(slow_epo_post[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
                                  method=method, fmin=2, fmax=40,
                                  bandwidth=bandwidth,
@@ -154,9 +144,9 @@ for subject in SUBJECTS:
 
     #for medium interstimulus epochs
     n_epochs_use = medium_epo_isi.events.shape[0]
-    stcs_medium_isi = compute_source_psd_epochs(medium_epo_isi[:n_epochs_use], inverse_operator_medium_isi,
+    stcs_medium_isi = compute_source_psd_epochs(medium_epo_isi[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
+                                 method=method, fmin=10, fmax=17,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -168,9 +158,9 @@ for subject in SUBJECTS:
 
     #for medium stimulation period epochs
     n_epochs_use = medium_epo_post.events.shape[0]
-    stcs_medium_post = compute_source_psd_epochs(medium_epo_post[:n_epochs_use], inverse_operator_medium_post,
+    stcs_medium_post = compute_source_psd_epochs(medium_epo_post[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
+                                 method=method, fmin=10, fmax=17,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -182,9 +172,9 @@ for subject in SUBJECTS:
     
     #for fast interstimulus epochs
     n_epochs_use = fast_epo_isi.events.shape[0]
-    stcs_fast_isi = compute_source_psd_epochs(fast_epo_isi[:n_epochs_use], inverse_operator_fast_isi,
+    stcs_fast_isi = compute_source_psd_epochs(fast_epo_isi[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
+                                 method=method, fmin=10, fmax=17,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -196,9 +186,9 @@ for subject in SUBJECTS:
 
     #for fast stimulation period epochs
     n_epochs_use = fast_epo_post.events.shape[0]
-    stcs_fast_post = compute_source_psd_epochs(fast_epo_post[:n_epochs_use], inverse_operator_fast_post,
+    stcs_fast_post = compute_source_psd_epochs(fast_epo_post[:n_epochs_use], inverse_operator,
                                  lambda2=lambda2,
-                                 method=method, fmin=2, fmax=40,
+                                 method=method, fmin=10, fmax=17,
                                  bandwidth=bandwidth,
                                  return_generator=True, verbose=True)
     psd_avg = 0.
@@ -218,14 +208,12 @@ for subject in SUBJECTS:
     stc_fast = stc_fast_isi
     stc_fast.data = (stc_fast_isi.data - stc_fast_post.data)/stc_fast_post.data  
     
-    #scales for plots
-    medium_slow = (np.max(stc_slow.data[:,1]))/2
-    maxim_slow = np.max(stc_slow.data[:,1])
-    #save
+    #save intestimulus power
+    stc_slow_isi.save(savepath + subject + '/' + subject + 'meg_slow_isi_2_40Hz')
+    stc_medium_isi.save(savepath + subject + '/' + subject + 'meg_medium_isi_2_40Hz')
+    stc_fast_isi.save(savepath + subject + '/' + subject + 'meg_fast_isi_2_40Hz')
+    
+    #save normalized data
     stc_slow.save(savepath + subject + '/' + subject + 'meg_slow_2_40Hz')
     stc_medium.save(savepath + subject + '/' + subject + 'meg_medium_2_40Hz')
     stc_fast.save(savepath + subject + '/' + subject + 'meg_fast_2_40Hz')
-    
-#    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow_10_17Hz')
-#    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium_10_17Hz')
-#    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast_10_17Hz')
