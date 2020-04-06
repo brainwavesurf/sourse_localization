@@ -101,6 +101,7 @@ for subject in SUBJECTS:
     raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
     raw_noise = io.read_raw_fif(raw_fname, preload=True)
     raw_noise.filter(10, 17, fir_design='firwin') 
+    raw_noise.crop(0, 80)
     methods = ['shrunk', 'empirical']
     noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
     
