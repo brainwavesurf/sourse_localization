@@ -63,8 +63,7 @@ for subject in SUBJECTS:
         
     
     #for 3 CSP components
-    slow = []
-    fast = []
+    diff = []
     CSP = ['1','2','3']
     for num in CSP:
         
@@ -103,8 +102,6 @@ for subject in SUBJECTS:
         psd_avg /= n_epochs_use
         freqs = stc_fast.times  # the frequencies are stored here
         stc_fast.data = psd_avg  
-        
-        fast.append(stc_fast.data)
 
         #for slow csp
         n_epochs_use = slow_epo.events.shape[0]
@@ -120,18 +117,16 @@ for subject in SUBJECTS:
         freqs = stc_slow.times  # the frequencies are stored here
         stc_slow.data = psd_avg
         
-        slow.append(stc_slow.data)
- 
-slow_avg = (slow[0] + slow[1] + slow[2]) / 3
-fast_avg = (fast[0] + fast[1] + fast[2]) / 3    
-
-diff_avg = fast_avg - slow_avg
-
-stc_fast_VS_slow_avg = stc_fast  
-stc_fast_VS_slow_avg.data = diff_avg
-
-#save
-stc_fast_VS_slow_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff')
+        stc_fast_VS_slow = stc_fast  
+        stc_fast_VS_slow.data = stc_fast.data - stc_slow.data
+        
+        diff.append(stc_fast_VS_slow.data)
+        
+    #average
+    diff_avg = stc_fast
+    diff_avg.data = sum(diff)/len(diff) 
+    #save
+    diff_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff')
   
 #        #subtract slow from fast
 #        stc_fast_VS_slow = stc_fast
