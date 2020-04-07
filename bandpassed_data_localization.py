@@ -28,8 +28,8 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0276', '0346', '0347', '0351', '0358', 
             '0380', '0381', '0382', '0383'] 
 
-SUBJECTS = SUBJ_ASD + SUBJ_NT
-#SUBJECTS = ['0102']
+#SUBJECTS = SUBJ_ASD + SUBJ_NT
+SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -141,34 +141,6 @@ for subject in SUBJECTS:
     psd_avg /= n_epochs_use
     freqs = stc_slow_post.times  # the frequencies are stored here
     stc_slow_post.data = psd_avg 
-
-    #for medium interstimulus epochs
-    n_epochs_use = medium_epo_isi.events.shape[0]
-    stcs_medium_isi = compute_source_psd_epochs(medium_epo_isi[:n_epochs_use], inverse_operator,
-                                 lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_medium_isi in enumerate(stcs_medium_isi):
-        psd_avg += stc_medium_isi.data
-    psd_avg /= n_epochs_use
-    freqs = stc_medium_isi.times  
-    stc_medium_isi.data = psd_avg
-
-    #for medium stimulation period epochs
-    n_epochs_use = medium_epo_post.events.shape[0]
-    stcs_medium_post = compute_source_psd_epochs(medium_epo_post[:n_epochs_use], inverse_operator,
-                                 lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_medium_post in enumerate(stcs_medium_post):
-        psd_avg += stc_medium_post.data
-    psd_avg /= n_epochs_use
-    freqs = stc_medium_post.times
-    stc_medium_post.data = psd_avg 
     
     #for fast interstimulus epochs
     n_epochs_use = fast_epo_isi.events.shape[0]
@@ -198,22 +170,13 @@ for subject in SUBJECTS:
     freqs = stc_fast_post.times  
     stc_fast_post.data = psd_avg 
 
-    #subtract "baseline" (stimulation period) from interstimulus data  
-    stc_slow = stc_slow_isi
-    stc_slow.data = (stc_slow_isi.data - stc_slow_post.data)/stc_slow_post.data  
+    #subtract slow from fast power   
+    stc_diff = stc_slow_isi
+    stc_diff.data = stc_fast_isi.data - stc_slow_isi.data 
     
-    stc_medium = stc_medium_isi
-    stc_medium.data = (stc_medium_isi.data - stc_medium_post.data)/stc_medium_post.data  
-    
-    stc_fast = stc_fast_isi
-    stc_fast.data = (stc_fast_isi.data - stc_fast_post.data)/stc_fast_post.data  
-    
-    #save intestimulus power
+    #save the bandpassed isi power
     stc_slow_isi.save(savepath + subject + '/' + subject + 'meg_slow_isi_10_17Hz')
-    stc_medium_isi.save(savepath + subject + '/' + subject + 'meg_medium_isi_10_17Hz')
     stc_fast_isi.save(savepath + subject + '/' + subject + 'meg_fast_isi_10_17Hz')
     
-    #save normalized data
-    stc_slow.save(savepath + subject + '/' + subject + 'meg_slow_10_17Hz')
-    stc_medium.save(savepath + subject + '/' + subject + 'meg_medium_10_17Hz')
-    stc_fast.save(savepath + subject + '/' + subject + 'meg_fast_10_17Hz')
+    #save the difference power
+    stc_diff.save(savepath + subject + '/' + subject + 'meg_diff_10_17Hz')
