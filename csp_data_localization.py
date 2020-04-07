@@ -26,7 +26,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0380', '0381', '0382', '0383'] 
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
-SUBJECTS = ['0106']
+SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -54,7 +54,17 @@ for subject in SUBJECTS:
     original_data = mne.io.read_raw_fif(raw_fname, preload=False)
     original_info = original_data.info
     
+    #calculate noise covariance matrix from empty room data
+    raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
+    raw_noise = io.read_raw_fif(raw_fname, preload=True)
+    raw_noise.filter(10, 17, fir_design='firwin') 
+    methods = ['shrunk', 'empirical']
+    noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
+        
+    
     #for 3 CSP components
+    slow = []
+    fast = []
     CSP = ['1','2','3']
     for num in CSP:
         
@@ -71,17 +81,10 @@ for subject in SUBJECTS:
         slow_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_slow.fif'
         slow_epo = mne.read_epochs(slow_fname, proj=False, verbose=None) 
 
-        #calculate noise covariance matrix from empty room data
-        raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
-        raw_noise = io.read_raw_fif(raw_fname, preload=True)
-        raw_noise.filter(10, 17, fir_design='firwin') 
-        methods = ['shrunk', 'empirical']
-        noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
-        
         #inverse operator
         inverse_operator_fast = make_inverse_operator(fast_epo.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
         inverse_operator_slow = make_inverse_operator(slow_epo.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
-       
+        
         method = "sLORETA"
         snr = 3.
         lambda2 = 1. / snr ** 2
@@ -100,6 +103,8 @@ for subject in SUBJECTS:
         psd_avg /= n_epochs_use
         freqs = stc_fast.times  # the frequencies are stored here
         stc_fast.data = psd_avg  
+        
+        fast.append(stc_fast.data)
 
         #for slow csp
         n_epochs_use = slow_epo.events.shape[0]
@@ -114,11 +119,24 @@ for subject in SUBJECTS:
         psd_avg /= n_epochs_use
         freqs = stc_slow.times  # the frequencies are stored here
         stc_slow.data = psd_avg
-    
-        #subtract slow from fast
-        stc_fast_VS_slow = stc_fast - stc_slow
         
-        #save
-        stc_slow.save(savepath + subject + '/' + subject + 'csp_slow' + num)
-        stc_fast.save(savepath + subject + '/' + subject + 'csp_fast' + num)
-        stc_fast_VS_slow.save(savepath + subject + '/' + subject + 'csp_diff' + num)
+        slow.append(stc_slow.data)
+ 
+slow_avg = (slow[0] + slow[1] + slow[2]) / 3
+fast_avg = (fast[0] + fast[1] + fast[2]) / 3    
+
+diff_avg = fast_avg - slow_avg
+
+stc_fast_VS_slow_avg = stc_fast  
+stc_fast_VS_slow_avg.data = diff_avg
+
+#save
+stc_fast_VS_slow_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff')
+  
+#        #subtract slow from fast
+#        stc_fast_VS_slow = stc_fast
+#        stc_fast_VS_slow.data = stc_fast.data - stc_slow.data
+#        
+#        
+#        #save
+#        stc_fast_VS_slow.save(savepath + subject + '/' + subject + 'csp_diff' + num)
