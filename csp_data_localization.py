@@ -23,10 +23,9 @@ SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
 SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',  
             '0164', '0253', '0254', '0256', '0273', '0274', '0275',
             '0276', '0346', '0347', '0351', '0358', 
-            '0380', '0381', '0382', '0383'] 
+            '0380', '0381', '0382', '0383']
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
-SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -43,7 +42,7 @@ for subject in SUBJECTS:
     model = mne.make_bem_model(subject='Case'+subject, ico=4, conductivity=conductivity, subjects_dir=subjects_dir)
     bem = mne.make_bem_solution(model)
     del model
-    raw_fname = myPATH + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/' + subject + '_rings_ICA_raw.fif'
+    raw_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/' + subject + '_rings_ICA_raw.fif'
     
     #set up a source space (inflated brain); if volume - use pos=5
     src = mne.setup_source_space('Case' + subject, spacing='oct6', subjects_dir=subjects_dir, add_dist=False)
@@ -60,7 +59,6 @@ for subject in SUBJECTS:
     raw_noise.filter(10, 17, fir_design='firwin') 
     methods = ['shrunk', 'empirical']
     noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
-        
     
     #for 3 CSP components
     diff = []
@@ -127,11 +125,3 @@ for subject in SUBJECTS:
     diff_avg.data = sum(diff)/len(diff) 
     #save
     diff_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff')
-  
-#        #subtract slow from fast
-#        stc_fast_VS_slow = stc_fast
-#        stc_fast_VS_slow.data = stc_fast.data - stc_slow.data
-#        
-#        
-#        #save
-#        stc_fast_VS_slow.save(savepath + subject + '/' + subject + 'csp_diff' + num)
