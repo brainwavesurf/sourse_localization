@@ -28,8 +28,8 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0276', '0346', '0347', '0351', '0358', 
             '0380', '0381', '0382', '0383'] 
 
-#SUBJECTS = SUBJ_ASD + SUBJ_NT
-SUBJECTS = ['0102']
+SUBJECTS = SUBJ_ASD + SUBJ_NT
+#SUBJECTS = ['0102']
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -40,6 +40,14 @@ for subject in SUBJECTS:
     savepath = myPATH + 'Results_Alpha_and_Gamma/'
     
     trans = PATHfrom + 'TRANS/' + subject + '_rings_ICA_raw-trans.fif'
+    
+    #calculate noise covariance matrix from empty room data
+    raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
+    raw_noise = io.read_raw_fif(raw_fname, preload=True)
+    raw_noise.filter(10, 17, fir_design='firwin') 
+    raw_noise.crop(0, 80)
+    methods = ['shrunk', 'empirical']
+    noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69))
     
     #create bem model and make its solution
     conductivity = (0.3,)  # for single layer
@@ -53,7 +61,7 @@ for subject in SUBJECTS:
     #make forward solution
     fwd = mne.make_forward_solution(raw_fname, trans=trans, src=src, bem=bem, meg=True, eeg=False, mindist=5.0, n_jobs=2)
     del bem, src
-     
+    
     #make epochs from raw    
     raw = io.Raw(raw_fname, preload=True)
     raw.filter(10, 17)
@@ -61,56 +69,33 @@ for subject in SUBJECTS:
     events= mne.find_events(raw, stim_channel='STI101', verbose=True, shortest_event=1)
     delay = 8 
     events[:,0] = events[:,0]+delay/1000.*raw.info['sfreq']
-    ev = np.sort(np.concatenate(( np.where(events[:,2]==2), np.where(events[:,2]==4), np.where(events[:,2]==8)), axis=1))  
+    ev = np.sort(np.concatenate((np.where(events[:,2]==2), np.where(events[:,2]==4), np.where(events[:,2]==8)), axis=1))  
     relevantevents = events[ev,:][0]
     #extract epochs from raw
     events_id = dict(V1=2, V2=4, V3=8)
     presim_sec = -1.
     poststim_sec = 1.4
-    allepochs = mne.Epochs(raw, relevantevents, events_id, tmin=presim_sec, tmax=poststim_sec, baseline=(None, 0), proj=False, preload=True)
-    if raw.info['sfreq'] == 1000.:
-        allepochs.decimate(2, copy=None)
-    #save fif file
-    fif_fname =  PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '-filtered-lagcorrected-epo.fif'
-    allepochs.save(fif_fname, overwrite=True) 
-    
     #load info about preceding events
     info_mat = scipy.io.loadmat(PATHfrom + 'Results_Alpha_and_Gamma/'+ subject + '/' + subject + '_info.mat')
     good_epo = info_mat['ALLINFO']['ep_order_num'][0][0][0]-1
     info_file = info_mat['ALLINFO']['stim_type_previous_tr'][0][0][0]
-    
-    #interstimulus epochs
-    epo_isi = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_isi.events = epo_isi.events[good_epo]
-    epo_isi.events[:,2] = info_file
-    epo_isi.crop(tmin=-0.8, tmax=0)
-    slow_epo_isi = epo_isi.__getitem__('V1')
-    medium_epo_isi = epo_isi.__getitem__('V2')
-    fast_epo_isi = epo_isi.__getitem__('V3')
+    goodevents = relevantevents[good_epo]
+    goodevents[:,2] = info_file
 
-    #stimulation epochs
-    epo_post = mne.read_epochs(fif_fname, proj=False, verbose=None) 
-    epo_post.events = epo_post.events[good_epo]
-    epo_post.events[:,2] = info_file
-    epo_post.crop(tmin=0.4, tmax=1.2)
-    slow_epo_post = epo_post.__getitem__('V1')
-    medium_epo_post = epo_post.__getitem__('V2')
-    fast_epo_post = epo_post.__getitem__('V3')
-    
-    #calculate noise covariance matrix from empty room data
-    raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
-    raw_noise = io.read_raw_fif(raw_fname, preload=True)
-    raw_noise.filter(10, 17, fir_design='firwin') 
-    raw_noise.crop(0, 80)
-    methods = ['shrunk', 'empirical']
-    noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
+    allepochs = mne.Epochs(raw, goodevents, events_id, tmin=presim_sec, tmax=poststim_sec, baseline=(None, 0), proj=False, preload=True)
     
     #inverse operator
-    inverse_operator = make_inverse_operator(epo_isi.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
+    inverse_operator = make_inverse_operator(allepochs.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
     
+    #interstimulus epochs
+    allepochs.crop(tmin=-0.8, tmax=0)
+    slow_epo_isi = allepochs.__getitem__('V1')
+    medium_epo_isi = allepochs.__getitem__('V2')
+    fast_epo_isi = allepochs.__getitem__('V3')
+    
+    #calculate stcs
     method = "sLORETA"
     snr = 3.
-    #lambda2 = 0.05
     lambda2 = 1. / snr ** 2
     bandwidth = 'hann'
     
@@ -128,20 +113,6 @@ for subject in SUBJECTS:
     freqs = stc_slow_isi.times  
     stc_slow_isi.data = psd_avg  
 
-    #for slow stimulation period epochs
-    n_epochs_use = slow_epo_post.events.shape[0]
-    stcs_slow_post = compute_source_psd_epochs(slow_epo_post[:n_epochs_use], inverse_operator,
-                                 lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_slow_post in enumerate(stcs_slow_post):
-        psd_avg += stc_slow_post.data
-    psd_avg /= n_epochs_use
-    freqs = stc_slow_post.times  # the frequencies are stored here
-    stc_slow_post.data = psd_avg 
-    
     #for fast interstimulus epochs
     n_epochs_use = fast_epo_isi.events.shape[0]
     stcs_fast_isi = compute_source_psd_epochs(fast_epo_isi[:n_epochs_use], inverse_operator,
@@ -155,20 +126,6 @@ for subject in SUBJECTS:
     psd_avg /= n_epochs_use
     freqs = stc_fast_isi.times  
     stc_fast_isi.data = psd_avg
-
-    #for fast stimulation period epochs
-    n_epochs_use = fast_epo_post.events.shape[0]
-    stcs_fast_post = compute_source_psd_epochs(fast_epo_post[:n_epochs_use], inverse_operator,
-                                 lambda2=lambda2,
-                                 method=method, fmin=10, fmax=17,
-                                 bandwidth=bandwidth,
-                                 return_generator=True, verbose=True)
-    psd_avg = 0.
-    for i, stc_fast_post in enumerate(stcs_fast_post):
-        psd_avg += stc_fast_post.data
-    psd_avg /= n_epochs_use
-    freqs = stc_fast_post.times  
-    stc_fast_post.data = psd_avg 
 
     #subtract slow from fast power   
     stc_diff = stc_slow_isi
