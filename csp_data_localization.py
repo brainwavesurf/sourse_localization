@@ -7,18 +7,15 @@ Created on Wed Apr  1 11:58:55 2020
 """
 
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#get_ipython().run_line_magic('matplotlib', 'inline')
-#matplotlib .use('TKAgg') 
+# -*- coding: utf-8 -*- 
 #import packages
 import mne
-from mne import io
 from mne.minimum_norm import make_inverse_operator, compute_source_psd_epochs
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
            '0140', '0158', '0162', '0163', '0178', '0179', '0255', '0257', '0348', 
-           '0378', '0379', '0384']
+           '0378', '0384']
                        
 SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',  
             '0164', '0253', '0254', '0256', '0273', '0274', '0275',
@@ -26,6 +23,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0380', '0381', '0382', '0383']
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
+
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -35,30 +33,14 @@ for subject in SUBJECTS:
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
     savepath = myPATH + 'Results_Alpha_and_Gamma/'
     
-    trans = PATHfrom + 'TRANS/' + subject + '_rings_ICA_raw-trans.fif'
-    
-    #create bem model and make its solution
-    conductivity = (0.3,)  # for single layer
-    model = mne.make_bem_model(subject='Case'+subject, ico=4, conductivity=conductivity, subjects_dir=subjects_dir)
-    bem = mne.make_bem_solution(model)
-    del model
     raw_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/' + subject + '_rings_ICA_raw.fif'
-    
-    #set up a source space (inflated brain); if volume - use pos=5
-    src = mne.setup_source_space('Case' + subject, spacing='oct6', subjects_dir=subjects_dir, add_dist=False)
-    #make forward solution
-    fwd = mne.make_forward_solution(raw_fname, trans=trans, src=src, bem=bem, meg=True, eeg=False, mindist=5.0, n_jobs=2)
-    del bem, src 
+    #load forward model
+    fwd = mne.read_forward_solution(savepath + subject + '/' + subject + '_fwd', verbose=None)
+    #load noise covariance matrix from empty room data
+    noise_cov = mne.read_cov(savepath + subject + '/' + subject + 'noise_cov_10_17Hz', verbose=None)
     
     original_data = mne.io.read_raw_fif(raw_fname, preload=False)
     original_info = original_data.info
-    
-    #calculate noise covariance matrix from empty room data
-    raw_fname = '/net/server/data/Archive/aut_gamma/orekhova/KI/EmptyRoom/' + subject + '/er/' + subject + '_er1_sss.fif'
-    raw_noise = io.read_raw_fif(raw_fname, preload=True)
-    raw_noise.filter(10, 17, fir_design='firwin') 
-    methods = ['shrunk', 'empirical']
-    noise_cov = mne.compute_raw_covariance(raw_noise, method=methods, rank=dict(meg=69)) 
     
     #for 3 CSP components
     diff = []
@@ -119,9 +101,13 @@ for subject in SUBJECTS:
         stc_fast_VS_slow.data = stc_fast.data - stc_slow.data
         
         diff.append(stc_fast_VS_slow.data)
-        
+        stc_fast_VS_slow.save(savepath + subject + '/' + subject + 'csp_diff' + num)
     #average
     diff_avg = stc_fast
     diff_avg.data = sum(diff)/len(diff) 
+    #sum
+    diff_sum = stc_fast
+    diff_sum.data = sum(diff)
     #save
-    diff_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff')
+    diff_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff') 
+    diff_sum.save(savepath + subject + '/' + subject + 'csp_sum_diff')    
