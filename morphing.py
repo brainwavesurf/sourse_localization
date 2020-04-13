@@ -32,27 +32,11 @@ for subject in SUBJECTS:
     
     #load stcs
     slow_isi = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_slow_isi_2_40Hz')
-    medium_isi = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_medium_isi_2_40Hz')
-    fast_isi = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_fast_isi_2_40Hz')
     
     #Setting up SourceMorph for SourceEstimate
-    morph_slow = mne.compute_source_morph(slow_isi, subject_from='Case' + subject,
-                                     subject_to='fsaverage',
+    morph = mne.compute_source_morph(slow_isi, subject_from='Case' + subject,
+                                     subject_to='fsaverage5',
                                      subjects_dir=subjects_dir)
-    
-    morph_medium = mne.compute_source_morph(medium_isi, subject_from='Case' + subject,
-                                     subject_to='fsaverage',
-                                     subjects_dir=subjects_dir)
-    
-    morph_fast = mne.compute_source_morph(fast_isi, subject_from='Case' + subject,
-                                     subject_to='fsaverage',
-                                     subjects_dir=subjects_dir)
-    #Apply morph to SourceEstimate
-    stc_fsaverage_slow = morph_slow.apply(slow_isi)
-    stc_fsaverage_medium = morph_medium.apply(medium_isi)
-    stc_fsaverage_fast = morph_fast.apply(fast_isi)
     
     #save
-    morph_slow.save(savepath + subject + '/' + subject + 'morph_slow_2_40')
-    morph_medium.save(savepath + subject + '/' + subject + 'morph_medium_2_40')
-    morph_fast.save(savepath + subject + '/' + subject + 'morph_fast_2_40')
+    morph.save(savepath + subject + '/' + subject + 'morph_2_40')
