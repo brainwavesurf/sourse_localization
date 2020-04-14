@@ -8,14 +8,6 @@ Created on Tue Apr 14 15:07:16 2020
 
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Apr 13 13:19:31 2020
-
-@author: a_shishkina
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #import packages
 import mne
 from mne import spatial_tris_connectivity, grade_to_tris
@@ -59,27 +51,23 @@ for subject in SUBJECTS:
     n_subjects = len(SUBJECTS)
     #    Let's make sure our results replicate, so set the seed.
     np.random.seed(0)
-    X1 = np.random.randn(n_vertices_fsave, n_times, n_subjects)
-    X1[:, :, :] += stc_fsaverage_slow.data[:, :, np.newaxis]
-    X2 = np.random.randn(n_vertices_fsave, n_times, n_subjects)
-    X2[:, :, :] += stc_fsaverage_fast.data[:, :, np.newaxis]
+    X = np.random.randn(n_vertices_fsave, n_times, n_subjects,2) 
+    X[:, :, :,0] += stc_fsaverage_fast.data[:, :, np.newaxis]
+    X[:, :, :,1] += stc_fsaverage_slow.data[:, :, np.newaxis]
     
-#We want to compare the overall activity levels for each condition
-X1 = np.abs(X1)  # only magnitude
-X2 = np.abs(X2)  # only magnitude
+X = np.abs(X)  # only magnitude
+X = X[:, :, :, 0] - X[:, :, :, 1] 
     
-X1 = np.transpose(X1, [2, 1, 0])
-X2 = np.transpose(X2, [2, 1, 0])
+X = np.transpose(X, [2, 1, 0])
 
 connectivity = spatial_tris_connectivity(grade_to_tris(5))
 
-p_threshold = 0.0001
-f_threshold = stats.distributions.f.ppf(1. - p_threshold / 2.,
-                                        len(SUBJ_ASD) - 1, len(SUBJ_NT) - 1)
+p_threshold = 0.001
+t_threshold = -stats.distributions.t.ppf(p_threshold / 2., n_subjects - 1)
 
 T_obs, clusters, cluster_p_values, H0 = clu =\
-    spatio_temporal_cluster_test([X1, X2], connectivity=connectivity, n_jobs=1,
-                                 threshold=f_threshold)
+    spatio_temporal_cluster_test(X, connectivity=connectivity, n_jobs=1,
+                                 threshold=t_threshold)
 #    Now select the clusters that are sig. at p < 0.05 (note that this value
 #    is multiple-comparisons corrected).
 good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
@@ -90,4 +78,4 @@ stc_all_cluster_vis = summarize_clusters_stc(clu, tstep=tstep,
                                              vertices=fsave_vertices,
                                              subject='fsaverage5')
 
-stc_all_cluster_vis.save(savepath + subject + '/' + subject + 'clusters_2_40')
+stc_all_cluster_vis.save(savepath + subject + '/' + subject + 'clusters_2_40_between_cond')
