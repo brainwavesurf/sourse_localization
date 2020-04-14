@@ -13,7 +13,7 @@ import mne
 from mne import spatial_tris_connectivity, grade_to_tris
 import numpy as np
 from scipy import stats as stats
-from mne.stats import summarize_clusters_stc, spatio_temporal_cluster_1samp_test
+from mne.stats import summarize_clusters_stc, spatio_temporal_cluster_test
 
 from numpy.random import randn
 
@@ -66,7 +66,7 @@ connectivity = spatial_tris_connectivity(grade_to_tris(5))
 p_threshold = 0.001
 t_threshold = -stats.distributions.t.ppf(p_threshold / 2., n_subjects - 1)
 T_obs, clusters, cluster_p_values, H0 = clu = \
-    spatio_temporal_cluster_1samp_test(X, connectivity=connectivity, n_jobs=1, out_type='indices', buffer_size = None,
+    spatio_temporal_cluster_test(X, connectivity=connectivity, n_jobs=1, out_type='indices', buffer_size = None,
                                        threshold=None, n_permutations=1000)
     
 good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
