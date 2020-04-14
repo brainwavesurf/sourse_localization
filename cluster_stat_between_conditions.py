@@ -26,7 +26,7 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
             '0276', '0346', '0347', '0351', '0358', 
             '0380', '0381', '0382', '0383'] 
 
-SUBJECTS = SUBJ_NT + SUBJ_ASD
+SUBJECTS = SUBJ_ASD + SUBJ_NT
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
@@ -56,7 +56,7 @@ for subject in SUBJECTS:
     X[:, :, :, 1] += stc_fsaverage_slow.data[:, :, np.newaxis]
     
 X = np.abs(X)  # only magnitude
-X = X[:, :, :, 0] - X[:, :, :, 1] 
+X = (X[:, :, :, 0] - X[:, :, :, 1])/(X[:, :, :, 0] + X[:, :, :, 1])
     
 X = np.transpose(X, [2, 1, 0])
 
@@ -67,7 +67,7 @@ t_threshold = -stats.distributions.t.ppf(p_threshold / 2., n_subjects - 1)
 
 T_obs, clusters, cluster_p_values, H0 = clu =\
      spatio_temporal_cluster_1samp_test(X, connectivity=connectivity, n_jobs=1,
-                                 threshold=t_threshold)
+                                 threshold=None)
 #    Now select the clusters that are sig. at p < 0.05 (note that this value
 #    is multiple-comparisons corrected).
 good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
