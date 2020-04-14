@@ -13,7 +13,7 @@ import mne
 from mne import spatial_tris_connectivity, grade_to_tris
 import numpy as np
 from scipy import stats as stats
-from mne.stats import summarize_clusters_stc, spatio_temporal_cluster_test
+from mne.stats import summarize_clusters_stc, spatio_temporal_cluster_1samp_test
 
 
 #load subj info
@@ -51,9 +51,9 @@ for subject in SUBJECTS:
     n_subjects = len(SUBJECTS)
     #    Let's make sure our results replicate, so set the seed.
     np.random.seed(0)
-    X = np.random.randn(n_vertices_fsave, n_times, n_subjects,2) 
-    X[:, :, :,0] += stc_fsaverage_fast.data[:, :, np.newaxis]
-    X[:, :, :,1] += stc_fsaverage_slow.data[:, :, np.newaxis]
+    X = np.random.randn(n_vertices_fsave, n_times, n_subjects, 2) 
+    X[:, :, :, 0] += stc_fsaverage_fast.data[:, :, np.newaxis]
+    X[:, :, :, 1] += stc_fsaverage_slow.data[:, :, np.newaxis]
     
 X = np.abs(X)  # only magnitude
 X = X[:, :, :, 0] - X[:, :, :, 1] 
@@ -66,7 +66,7 @@ p_threshold = 0.001
 t_threshold = -stats.distributions.t.ppf(p_threshold / 2., n_subjects - 1)
 
 T_obs, clusters, cluster_p_values, H0 = clu =\
-    spatio_temporal_cluster_test(X, connectivity=connectivity, n_jobs=1,
+     spatio_temporal_cluster_1samp_test(X, connectivity=connectivity, n_jobs=1,
                                  threshold=t_threshold)
 #    Now select the clusters that are sig. at p < 0.05 (note that this value
 #    is multiple-comparisons corrected).
