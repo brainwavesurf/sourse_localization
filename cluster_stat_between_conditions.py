@@ -56,7 +56,7 @@ for subject in SUBJECTS:
     X[:, :, :, 1] += stc_fsaverage_slow.data[:, :, np.newaxis]
     
 X = np.abs(X)  # only magnitude
-X = (X[:, :, :, 0] - X[:, :, :, 1])/(X[:, :, :, 0] + X[:, :, :, 1])
+X = (X[:, :, :, 0] - X[:, :, :, 1])/(X[:, :, :, 0] + X[:, :, :, 1])*100
     
 X = np.transpose(X, [2, 1, 0])
 
