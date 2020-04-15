@@ -70,7 +70,6 @@ T_obs, clusters, cluster_p_values, H0 = clu =\
                                  threshold=None)
 #    Now select the clusters that are sig. at p < 0.05 (note that this value
 #    is multiple-comparisons corrected).
-good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
 
 fsave_vertices = [np.arange(10242), np.arange(10242)]
 tstep = stc_fsaverage_slow.tstep
@@ -79,3 +78,9 @@ stc_all_cluster_vis = summarize_clusters_stc(clu, tstep=tstep,
                                              subject='fsaverage5')
 
 stc_all_cluster_vis.save(savepath + subject + '/' + subject + 'clusters_2_40_between_cond')
+
+good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
+tt=[]
+for i in range(len(good_cluster_inds)):
+    tt += list(clusters[good_cluster_inds[i]][0])
+good_sources = np.asarray(tt) 
