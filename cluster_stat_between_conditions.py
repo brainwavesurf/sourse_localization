@@ -74,9 +74,10 @@ connectivity = spatial_tris_connectivity(grade_to_tris(5))
 T_obs, clusters, cluster_p_values, H0 = clu =\
      spatio_temporal_cluster_1samp_test(X, connectivity=connectivity, n_jobs=1, threshold=None, buffer_size=None, verbose=True)
 
+good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
 #convenient representation of each cluster, where each cluster becomes a "time point" in the SourceEstimate
 fsave_vertices = [np.arange(10242), np.arange(10242)]
-#tstep = stc_fsaverage_slow.tstep
+tstep = stc_fsaverage_slow.tstep
 stc_all_cluster_vis = summarize_clusters_stc(clu, vertices=fsave_vertices, subject='fsaverage5')
 #save stc with clusters
-stc_all_cluster_vis.save(savepath + subject + '/' + subject + 'clusters_2_40_between_cond')
+stc_all_cluster_vis.save(savepath + subject + '/' + 'clusters_2_40_between_cond_without_tstep')
