@@ -10,7 +10,6 @@ Created on Wed Apr 15 16:05:14 2020
 # -*- coding: utf-8 -*-
 #import packages
 import mne
-import numpy as np
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -26,7 +25,7 @@ SUBJECTS = SUBJ_ASD + SUBJ_NT
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
-
+X = []
 for subject in SUBJECTS:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
@@ -40,15 +39,9 @@ for subject in SUBJECTS:
     
     #Apply morph to SourceEstimate
     stc_fsaverage = morph.apply(sum_csp)
+    X.append(stc_fsaverage.data)
     
-    n_vertices_fsave, n_times = stc_fsaverage.data.shape
-    n_subjects = len(SUBJECTS)
-    #    Let's make sure our results replicate, so set the seed.
-    np.random.seed(0)
-    X = np.random.randn(n_vertices_fsave, n_times, n_subjects) 
-    X[:, :, :] += stc_fsaverage.data[:, :, np.newaxis]
-    
-X_avg = np.average(X,2)
+X_avg = sum(X)/len(X)
 #make stc format
 X_CSP = stc_fsaverage
 X_CSP.data = X_avg
