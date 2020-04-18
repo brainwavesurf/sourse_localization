@@ -31,7 +31,7 @@ for subject in SUBJECTS:
     savepath = myPATH + 'Results_Alpha_and_Gamma/'
     
     #load stcs
-    sum_csp = mne.read_source_estimate(savepath + subject + '/' + subject + 'csp_sum_diff')
+    sum_csp = mne.read_source_estimate(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_V3-V1_10_17Hz')
     
     #Setting up SourceMorph for SourceEstimate
     morph = mne.compute_source_morph(sum_csp, subject_from='Case' + subject,
@@ -39,4 +39,4 @@ for subject in SUBJECTS:
                                      subjects_dir=subjects_dir)
     
     #save
-    morph.save(savepath + subject + '/' + subject + 'morph_CSP', overwrite=True)
+    morph.save(savepath + '1_results/morph_CSP/' + subject + 'CSP')
