@@ -107,14 +107,18 @@ for subject in SUBJECTS:
     psd_avg /= n_epochs_use
     freqs = stc_fast_isi.times  
     stc_fast_isi.data = psd_avg
-
-    #subtract slow from fast power   
-    stc_diff = stc_slow_isi
-    stc_diff.data = stc_fast_isi.data - stc_slow_isi.data 
     
     #save the bandpassed isi power
     stc_slow_isi.save(savepath + subject + '/' + subject + 'meg_slow_isi_10_17Hz')
     stc_fast_isi.save(savepath + subject + '/' + subject + 'meg_fast_isi_10_17Hz')
     
+    #subtract slow from fast power 
+    stc_diff = stc_fast_isi
+    stc_diff_norm = stc_slow_isi
+    
+    stc_diff.data = stc_fast_isi.data - stc_slow_isi.data
+    stc_diff_norm.data = (stc_fast_isi.data - stc_slow_isi.data)/(stc_fast_isi.data + stc_slow_isi.data)*100
+
     #save the difference power
-    stc_diff.save(savepath + subject + '/' + subject + 'meg_diff_10_17Hz')
+    stc_diff.save(savepath + '1_results/meg_10_17_bandpass/' + subject + 'meg_diff_V3-V1_10_17Hz')
+    stc_diff_norm.save(savepath + '1_results/meg_10_17_bandpass/' + subject + 'meg_%_diff_V3-V1_10_17Hz')
