@@ -97,17 +97,18 @@ for subject in SUBJECTS:
         freqs = stc_slow.times  # the frequencies are stored here
         stc_slow.data = psd_avg
         
-        stc_fast_VS_slow = stc_fast  
-        stc_fast_VS_slow.data = stc_fast.data - stc_slow.data
+        #subtract slow from fast power 
+        stc_diff = stc_fast
+        stc_diff_norm = stc_slow
         
-        diff.append(stc_fast_VS_slow.data)
-        stc_fast_VS_slow.save(savepath + subject + '/' + subject + 'csp_diff' + num)
-    #average
-    diff_avg = stc_fast
-    diff_avg.data = sum(diff)/len(diff) 
+        stc_diff.data = stc_fast.data - stc_slow.data
+        #save
+        stc_diff.save(savepath + subject + '/' + subject + 'csp_V3-V1' + num)      
+        diff.append(stc_diff.data)
+        
     #sum
-    diff_sum = stc_fast
+    diff_sum = stc_slow
     diff_sum.data = sum(diff)
+    
     #save
-    diff_avg.save(savepath + subject + '/' + subject + 'csp_avg_diff') 
-    diff_sum.save(savepath + subject + '/' + subject + 'csp_sum_diff')    
+    diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_V3-V1_10_17Hz')
