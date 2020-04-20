@@ -26,9 +26,7 @@ PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
 X_sum = []
-X_sum_norm = []
-X_avg = []
-X_avg_norm = []
+
 for subject in SUBJ_NT:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
@@ -56,9 +54,7 @@ avg_CSP_sum.data = X_avg_sum
 avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'NT_avg_sum_CSP')
 
 X_sum = []
-X_sum_norm = []
-X_avg = []
-X_avg_norm = []
+
 for subject in SUBJ_ASD:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
