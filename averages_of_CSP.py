@@ -43,7 +43,7 @@ for subject in SUBJ_NT:
     #Apply morph to SourceEstimate
     sum_csp_fsaverage = morph.apply(sum_csp)
     #save
-    sum_csp_fsaverage.save(savepath + '1_results/CSP_sum_fsaverage5/' + subject + 'sum_CSP_V3-V1_10_17Hz')
+    #sum_csp_fsaverage.save(savepath + '1_results/CSP_sum_fsaverage5/' + subject + 'sum_CSP_V3-V1_10_17Hz')
     
     X_sum.append(sum_csp_fsaverage.data)
     
@@ -53,7 +53,7 @@ X_avg_sum = sum(X_sum)/len(X_sum)
 #make stc format and save
 avg_CSP_sum = sum_csp_fsaverage
 avg_CSP_sum.data = X_avg_sum
-avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'ASD_avg_sum_CSP')
+avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'NT_avg_sum_CSP')
 
 X_sum = []
 X_sum_norm = []
@@ -73,7 +73,7 @@ for subject in SUBJ_ASD:
     #Apply morph to SourceEstimate
     sum_csp_fsaverage = morph.apply(sum_csp)
     #save
-    sum_csp_fsaverage.save(savepath + '1_results/CSP_sum_fsaverage5/' + subject + 'sum_CSP_V3-V1_10_17Hz')
+    #sum_csp_fsaverage.save(savepath + '1_results/CSP_sum_fsaverage5/' + subject + 'sum_CSP_V3-V1_10_17Hz')
     
     X_sum.append(sum_csp_fsaverage.data)
     
@@ -83,4 +83,4 @@ X_avg_sum = sum(X_sum)/len(X_sum)
 #make stc format and save
 avg_CSP_sum = sum_csp_fsaverage
 avg_CSP_sum.data = X_avg_sum
-avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'NT_avg_sum_CSP')
+avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'ASD_avg_sum_CSP')
