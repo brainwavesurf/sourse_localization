@@ -13,6 +13,7 @@ import mne
 from scipy import stats
 import numpy as np
 from math import sqrt
+import matplotlib.pyplot as plt
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -48,17 +49,34 @@ for subject in SUBJ_NT:
     
     X_sum.append(sum_csp_fsaverage.data)
     
+#average over subjects
+avg = np.mean(X_sum, axis=0)
+np.save(savepath + '1_results/average_CSP_sum/' + 'NT_avgoversubj_CSP', avg)
+
 #calculate the standart error of the mean 
-arr = np.asarray(X_sum)
-#stand = np.std(arr, axis=0)
-#sem = stand/sqrt(len(SUBJ_ASD))
+stand = np.std(X_sum, axis=0)
+hand_sem = stand/sqrt(len(SUBJ_ASD))
+np.save(savepath + '1_results/average_CSP_sum/' + 'NT_handSEM_CSP', hand_sem)
    
-X_sum_SEM = stats.sem(arr, axis=0)
+X_sum_SEM = stats.sem(X_sum, axis=0)
+np.save(savepath + '1_results/average_CSP_sum/' + 'NT_SEM_CSP', X_sum_SEM)
+
+#plot histograms
+for i in np.arange(1,6):
+    plt.figure(i)
+    plt.subplot(1, 2, 1)
+    plt.hist(X_sum_SEM[:,i-1])
+    plt.xticks([min(X_sum_SEM[:,i-1]), np.median(X_sum_SEM[:,i-1]), max(X_sum_SEM[:,i-1])])
+
+    plt.subplot(1, 2, 2)
+    plt.hist(avg[:,i-1],color = "skyblue")
+    plt.xticks([min(avg[:,i-1]), np.median(avg[:,i-1]), max(avg[:,i-1])])
+    plt.show()
 
 #make stc format and save
-avg_CSP_sum = sum_csp_fsaverage
-avg_CSP_sum.data = X_sum_SEM
-avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'NT_SEM_sum_CSP')
+sem_CSP_sum = sum_csp_fsaverage
+sem_CSP_sum.data = X_sum_SEM
+sem_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'NT_SEM_sum_CSP')
 
 X_sum = []
 for subject in SUBJ_ASD:
@@ -78,15 +96,20 @@ for subject in SUBJ_ASD:
     #sum_csp_fsaverage.save(savepath + '1_results/CSP_sum_fsaverage5/' + subject + 'sum_CSP_V3-V1_10_17Hz')
     
     X_sum.append(sum_csp_fsaverage.data)
-    
-#calculate the standart error of the mean 
-#arr = np.asarray(X_sum)
-#stand = np.std(arr, axis=0)
-#sem = stand/sqrt(len(SUBJ_ASD))
+  
+#average over subjects
+avg = np.mean(X_sum, axis=0)
+np.save(savepath + '1_results/average_CSP_sum/' + 'ASD_avgoversubj_CSP', avg)
 
-X_sum_SEM = stats.sem(arr, axis=0)
+#calculate the standart error of the mean 
+stand = np.std(X_sum, axis=0)
+hand_sem = stand/sqrt(len(SUBJ_ASD))
+np.save(savepath + '1_results/average_CSP_sum/' + 'ASD_handSEM_CSP', hand_sem)
+   
+X_sum_SEM = stats.sem(X_sum, axis=0)
+np.save(savepath + '1_results/average_CSP_sum/' + 'ASD_SEM_CSP', X_sum_SEM)
 
 #make stc format and save
-avg_CSP_sum = sum_csp_fsaverage
-avg_CSP_sum.data = X_sum_SEM
-avg_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'ASD_SEM_sum_CSP')
+sem_CSP_sum = sum_csp_fsaverage
+sem_CSP_sum.data = X_sum_SEM
+sem_CSP_sum.save(savepath + '1_results/average_CSP_sum/' + 'ASD_SEM_sum_CSP')
