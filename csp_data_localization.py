@@ -11,6 +11,7 @@ Created on Wed Apr  1 11:58:55 2020
 #import packages
 import mne
 from mne.minimum_norm import make_inverse_operator, compute_source_psd_epochs
+import numpy as np
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -100,7 +101,6 @@ for subject in SUBJECTS:
         
         #subtract slow from fast power 
         stc_diff = stc_fast
-        stc_diff_norm = stc_slow
         
         stc_diff.data = stc_fast.data - stc_slow.data
         #save
@@ -110,8 +110,13 @@ for subject in SUBJECTS:
     #sum
     diff_sum = stc_slow
     diff_sum.data = sum(diff)
-    
     #save
     diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_3_V3-V1')
     #diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_4_6_V3-V1')
     
+    #avg
+    diff_avg = stc_fast
+    diff_avg.data = np.mean(diff, axis=0)
+    #save
+    diff_avg.save(savepath + '1_results/CSP_avg/' + subject + 'avg_CSP_1_3_V3-V1')
+    #diff_avg.save(savepath + '1_results/CSP_avg/' + subject + 'avg_CSP_4_6_V3-V1')
