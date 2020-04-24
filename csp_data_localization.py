@@ -42,13 +42,14 @@ for subject in SUBJECTS:
     original_data = mne.io.read_raw_fif(raw_fname, preload=False)
     original_info = original_data.info
     
-    #for 3 CSP components
+    #for the first 3 CSP components and the second 3 CSP components (commented)
     diff = []
     CSP = ['1','2','3']
+    #CSP = ['4','5','6']
     for num in CSP:
         
         #load csp data for fast from fieldtrip
-        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp.mat'
+        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp_1_6.mat'
         fast_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='epochs_fast'+num, trialinfo_column=0)
         fast_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif', overwrite=True)
         fast_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif'
@@ -111,4 +112,6 @@ for subject in SUBJECTS:
     diff_sum.data = sum(diff)
     
     #save
-    diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_V3-V1_10_17Hz')
+    diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_3_V3-V1')
+    #diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_4_6_V3-V1')
+    
