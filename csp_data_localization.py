@@ -49,7 +49,7 @@ for subject in SUBJECTS:
     for num in CSP:
         
         #load csp data for fast from fieldtrip
-        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp_1_6.mat'
+        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp_1_6_to_mne.mat'
         fast_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='epochs_fast'+num, trialinfo_column=0)
         fast_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif', overwrite=True)
         fast_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif'
