@@ -45,8 +45,7 @@ for subject in SUBJECTS:
     
     #for the first 3 CSP components and the second 3 CSP components (commented)
     diff = []
-    CSP = ['1','2','3']
-    #CSP = ['4','5','6']
+    CSP = ['1','2','3','4','5','6']
     for num in CSP:
         
         #load csp data for fast from fieldtrip
@@ -111,12 +110,10 @@ for subject in SUBJECTS:
     diff_sum = stc_slow
     diff_sum.data = sum(diff)
     #save
-    diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_3_V3-V1')
-    #diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_4_6_V3-V1')
+    diff_sum.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_6_V3-V1')
     
     #avg
     diff_avg = stc_fast
     diff_avg.data = np.mean(diff, axis=0)
     #save
-    diff_avg.save(savepath + '1_results/CSP_avg/' + subject + 'avg_CSP_1_3_V3-V1')
-    #diff_avg.save(savepath + '1_results/CSP_avg/' + subject + 'avg_CSP_4_6_V3-V1')
+    diff_avg.save(savepath + '1_results/CSP_avg/' + subject + 'avg_CSP_1_6_V3-V1')
