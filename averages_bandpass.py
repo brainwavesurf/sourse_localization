@@ -10,7 +10,7 @@ Created on Wed Apr 15 16:05:14 2020
 # -*- coding: utf-8 -*-
 #import packages
 import mne
-
+import numpy as np
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
            '0140', '0158', '0162', '0163', '0178', '0179', '0255', '0257', '0348', 
@@ -26,8 +26,7 @@ PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
 #for all subjects
-X_with = []
-X_without = []
+X = []
 for subject in SUBJECTS:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
@@ -43,31 +42,24 @@ for subject in SUBJECTS:
     #Apply morph to SourceEstimate
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
-    stc_str1 = morph.apply(stc_slow)
-    stc_str2 = morph.apply(stc_fast)
-    n_vertices_fsave, n_times = stc_fsaverage_slow.data.shape
     
-    stc_fsaverage_diff_with = ((stc_fsaverage_fast.data - stc_fsaverage_slow.data)/(stc_fsaverage_fast.data + stc_fsaverage_slow.data))*100
-    stc_fsaverage_diff_without = stc_fsaverage_fast.data - stc_fsaverage_slow.data
+    stc_str = morph.apply(stc_slow)
     
-    X_with.append(stc_fsaverage_diff_with)
-    X_without.append(stc_fsaverage_diff_without)
+    stc_fsaverage_diff = (stc_fsaverage_fast.data[:,6:13] - stc_fsaverage_slow.data[:,6:13])/(stc_fsaverage_fast.data[:,6:13] + stc_fsaverage_slow.data[:,6:13])*100    
     
-X_with_avg = sum(X_with)/len(X_with)
-X_without_avg = sum(X_without)/len(X_without)
+    X.append(stc_fsaverage_diff)
+    
 
-X_with = stc_str1
-X_with.data = X_with_avg
+X_avg_freq = np.mean(X, axis=2)
+X_avg_group = np.mean(X_avg_freq, axis=0)
+X_avg = X_avg_group[:, np.newaxis]
 
-X_without = stc_str2
-X_without.data = X_without_avg
-
-X_with.save(savepath + '1_results/average_meg_diff/' + '/' + '2_40avg_with_norm')
-X_without.save(savepath + '1_results/average_meg_diff/' + '/' + '2_40avg_without_norm')
+X_abs = stc_str
+X_abs.data = X_avg
+X_abs.save(savepath + '1_results/average_meg_diff/' + '/' + '10_17_avg_%_diff')
 
 #ASD group
-X_with = []
-X_without = []
+X = []
 for subject in SUBJ_ASD:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
@@ -84,30 +76,22 @@ for subject in SUBJ_ASD:
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
     
-    stc_str1 = morph.apply(stc_slow)
-    stc_str2 = morph.apply(stc_fast)
+    stc_str = morph.apply(stc_slow)
     
-    stc_fsaverage_diff_with = ((stc_fsaverage_fast.data - stc_fsaverage_slow.data)/(stc_fsaverage_fast.data + stc_fsaverage_slow.data))*100
-    stc_fsaverage_diff_without = stc_fsaverage_fast.data - stc_fsaverage_slow.data
+    stc_fsaverage_diff = (stc_fsaverage_fast.data[:,6:13] - stc_fsaverage_slow.data[:,6:13])/(stc_fsaverage_fast.data[:,6:13] + stc_fsaverage_slow.data[:,6:13])*100    
     
-    X_with.append(stc_fsaverage_diff_with)
-    X_without.append(stc_fsaverage_diff_without)
+    X.append(stc_fsaverage_diff)
     
-X_with_avg = sum(X_with)/len(X_with)
-X_without_avg = sum(X_without)/len(X_without)
+X_avg_freq = np.mean(X, axis=2)
+X_avg_group = np.mean(X_avg_freq, axis=0)
+X_avg = X_avg_group[:, np.newaxis]
 
-X_with = stc_str1
-X_with.data = X_with_avg
-
-X_without = stc_str2
-X_without.data = X_without_avg
-
-X_with.save(savepath + '1_results/average_meg_diff/' + 'ASD_10_17_avg_with_norm')
-X_without.save(savepath + '1_results/average_meg_diff/' +  'ASD_2_40avg_without_norm')
+X_abs = stc_str
+X_abs.data = X_avg
+X_abs.save(savepath + '1_results/average_meg_diff/' + '/' + 'ASD_10_17_avg_%_diff')
 
 #NT group
-X_with = []
-X_without = []
+X = []
 for subject in SUBJ_NT:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
@@ -123,23 +107,17 @@ for subject in SUBJ_NT:
     #Apply morph to SourceEstimate
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
-    stc_str1 = morph.apply(stc_slow)
-    stc_str2 = morph.apply(stc_fast)
     
-    stc_fsaverage_diff_with = ((stc_fsaverage_fast.data - stc_fsaverage_slow.data)/(stc_fsaverage_fast.data + stc_fsaverage_slow.data))*100
-    stc_fsaverage_diff_without = stc_fsaverage_fast.data - stc_fsaverage_slow.data
+    stc_str = morph.apply(stc_slow)
     
-    X_with.append(stc_fsaverage_diff_with)
-    X_without.append(stc_fsaverage_diff_without)
+    stc_fsaverage_diff = (stc_fsaverage_fast.data[:,6:13] - stc_fsaverage_slow.data[:,6:13])/(stc_fsaverage_fast.data[:,6:13] + stc_fsaverage_slow.data[:,6:13])*100
     
-X_with_avg = sum(X_with)/len(X_with)
-X_without_avg = sum(X_without)/len(X_without)
+    X.append(stc_fsaverage_diff)
+    
+X_avg_freq = np.mean(X, axis=2)
+X_avg_group = np.mean(X_avg_freq, axis=0)
+X_avg = X_avg_group[:, np.newaxis]
 
-X_with = stc_str1
-X_with.data = X_with_avg
-
-X_without = stc_str2
-X_without.data = X_without_avg
-
-X_with.save(savepath + '1_results/average_meg_diff/' + 'NT_2_40avg_with_norm')
-X_without.save(savepath + '1_results/average_meg_diff/' + 'NT_2_40avg_without_norm')
+X_abs = stc_str
+X_abs.data = X_avg
+X_abs.save(savepath + '1_results/average_meg_diff/' + '/' + 'NT_10_17_avg_%_diff')
