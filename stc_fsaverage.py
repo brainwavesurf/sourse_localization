@@ -6,14 +6,6 @@ Created on Mon Apr 27 17:33:15 2020
 @author: a_shishkina
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 17 11:50:14 2020
-
-@author: mtw
-"""
-
 import mne
 
 #load subj info
@@ -31,16 +23,18 @@ PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 savepath = myPATH + 'Results_Alpha_and_Gamma/'
 
-for subject in SUBJ_NT:   
+for subject in SUBJECTS:   
     
     # Load stc to in common cortical space (fsaverage)
     stc_slow = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_slow_isi_2_40Hz')
     stc_fast = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_fast_isi_2_40Hz')
+    
     #Setting up SourceMorph for SourceEstimate
     morph = mne.read_source_morph(savepath + subject + '/' + subject + 'morph_2_40-morph.h5')
     #Apply morph to SourceEstimate
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
+
     
     stc_fsaverage_slow.save(savepath + '1_results/stc_fsaverage/' + subject + '_stc_fsaverage_slow')
     stc_fsaverage_fast.save(savepath + '1_results/stc_fsaverage/' + subject + '_stc_fsaverage_fast')
