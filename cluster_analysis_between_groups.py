@@ -37,8 +37,8 @@ savepath = myPATH + 'Results_Alpha_and_Gamma/'
 savefolder = myPATH + 'Results_Alpha_and_Gamma/1_results/source_clusters/'
 src_fname = subjects_dir + 'fsaverage5' + '/bem/fsaverage5-ico-5p-src.fif'
 
-tmin=11.
-tmax=13.
+tmin=10.
+tmax=17.
 
 X1=[]
 for subject in SUBJ_NT:   
@@ -52,7 +52,7 @@ for subject in SUBJ_NT:
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
     
-    stcDiff = (stc_fsaverage_fast.data[:,7:10] - stc_fsaverage_slow.data[:,7:10])/(stc_fsaverage_fast.data[:,7:10]+stc_fsaverage_slow.data[:,7:10])
+    stcDiff = (stc_fsaverage_fast.data[:,6:13] - stc_fsaverage_slow.data[:,6:13])/(stc_fsaverage_fast.data[:,6:13]+stc_fsaverage_slow.data[:,6:13])
     X1.append(stcDiff)
 
 X1 = np.mean(X1, axis=2)
@@ -71,7 +71,7 @@ for subj in SUBJ_ASD:
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
     
-    stcDiff = (stc_fsaverage_fast.data[:,7:10] - stc_fsaverage_slow.data[:,7:10])/(stc_fsaverage_fast.data[:,7:10]+stc_fsaverage_slow.data[:,7:10])
+    stcDiff = (stc_fsaverage_fast.data[:,6:13] - stc_fsaverage_slow.data[:,6:13])/(stc_fsaverage_fast.data[:,6:13]+stc_fsaverage_slow.data[:,6:13])
     X2.append(stcDiff)
 
 X2 = np.mean(X2, axis=2)
