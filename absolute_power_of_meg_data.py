@@ -60,7 +60,10 @@ for subject in SUBJECTS:
     goodevents = relevantevents[good_epo]
     goodevents[:,2] = info_file
     allepochs = mne.Epochs(raw, goodevents, events_id, tmin=presim_sec, tmax=poststim_sec, baseline=(None, 0), proj=False, preload=True)
-
+    
+    if allepochs.info['sfreq']>500:
+        allepochs.resample(500)
+        
     #interstimulus epochs
     allepochs.crop(tmin=-0.8, tmax=0)
     slow_epo_isi = allepochs.__getitem__('V1')
