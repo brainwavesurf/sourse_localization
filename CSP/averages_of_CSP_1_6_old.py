@@ -11,7 +11,6 @@ Created on Wed Apr 15 16:05:14 2020
 #import packages
 import mne
 import numpy as np
-from mne.stats import ttest_1samp_no_p
 
 #load subj info
 SUBJ_NT = ['0101', '0102', '0103', '0104', '0105', '0136', '0137', '0138',
@@ -27,56 +26,63 @@ SUBJECTS = SUBJ_ASD + SUBJ_NT
 PATHfrom = '/net/server/data/Archive/aut_gamma/orekhova/KI/'
 myPATH = '/net/server/data/Archive/aut_gamma/orekhova/KI/Scripts_bkp/Shishkina/KI/'
 subjects_dir = PATHfrom + 'freesurfersubjects'
-N=len(SUBJ_ASD)
-ave=0.
-ALL = []
-for subject in SUBJ_ASD:
-    
-    subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
-    savepath = myPATH + 'Results_Alpha_and_Gamma/'
-    
-    #load stcs
-    sum_csp_norm = mne.read_source_estimate(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_V3-V1_10_17Hz')
 
-    #Setting up SourceMorph for SourceEstimate
-    morph = mne.read_source_morph(savepath + '1_results/morph_CSP/' + subject + 'CSP-morph.h5')
-    
-    #Apply morph to SourceEstimate
-    stc_fsaverage_csp_diff = morph.apply(sum_csp_norm)
-    ALL.append(stc_fsaverage_csp_diff.data)
-    ave += stc_fsaverage_csp_diff.data    
-ave /= N
-stc_fsaverage_csp_diff.data=ave
-X = np.asarray(ALL)
-Tval = ttest_1samp_no_p(X)
-stc_Tval = stc_fsaverage_csp_diff
-stc_Tval.data = Tval
-# save stc Tstat
-stc_Tval.save(savepath + '1_results/Tstat_CSP_sum/'  + '/' + 'ASD_Tstat_sum_CSP_diff_V3-V1') 
-
-N=len(SUBJ_NT)
-ave=0.
-ALL = []
+#for the NT group
+X_sum = []
 for subject in SUBJ_NT:
     
     subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
     savepath = myPATH + 'Results_Alpha_and_Gamma/'
     
     #load stcs
-    sum_csp_norm = mne.read_source_estimate(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_V3-V1_10_17Hz')
+    sum_csp = mne.read_source_estimate(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_6_diff_V3-V1_old')
 
     #Setting up SourceMorph for SourceEstimate
     morph = mne.read_source_morph(savepath + '1_results/morph_CSP/' + subject + 'CSP-morph.h5')
     
     #Apply morph to SourceEstimate
-    stc_fsaverage_csp_diff = morph.apply(sum_csp_norm)
-    ALL.append(stc_fsaverage_csp_diff.data)
-    ave += stc_fsaverage_csp_diff.data    
-ave /= N
-stc_fsaverage_csp_diff.data=ave
-X = np.asarray(ALL)
-Tval = ttest_1samp_no_p(X)
-stc_Tval = stc_fsaverage_csp_diff
-stc_Tval.data = Tval
-# save stc Tstat
-stc_Tval.save(savepath + '1_results/Tstat_CSP_sum/'  + '/' + 'NT_Tstat_sum_CSP_diff_V3-V1') 
+    sum_csp_fsaverage = morph.apply(sum_csp)
+    X_sum.append(sum_csp_fsaverage.data)
+    
+#average across freqs and subjects
+X = np.asarray(X_sum)
+X_avg_freq = np.mean(X, axis=2)
+X_avg_group = np.mean(X_avg_freq, axis=0)
+X_avg = X_avg_group[:, np.newaxis]
+
+#make stc format and save
+avg_CSP_sum_NT = sum_csp_fsaverage
+avg_CSP_sum_NT.data = X_avg
+avg_CSP_sum_NT.save(savepath + '1_results/average_CSP_sum/' + 'NT_avg_sum_CSP_1_6_old')
+
+#for the ASD group
+X_sum = []
+for subject in SUBJ_ASD:
+    
+    subjpath = PATHfrom  + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/'
+    savepath = myPATH + 'Results_Alpha_and_Gamma/'
+    
+    #load stcs
+    sum_csp = mne.read_source_estimate(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_6_diff_V3-V1_old')
+
+    #Setting up SourceMorph for SourceEstimate
+    morph = mne.read_source_morph(savepath + '1_results/morph_CSP/' + subject + 'CSP-morph.h5')
+    
+    #Apply morph to SourceEstimate
+    sum_csp_fsaverage = morph.apply(sum_csp)
+    
+    X_sum.append(sum_csp_fsaverage.data)
+    
+#average across freqs and subjects
+X_avg_freq = np.mean(X_sum, axis=2)
+X_avg_group = np.mean(X_avg_freq, axis=0)
+X_avg = X_avg_group[:, np.newaxis]
+
+#make stc format and save
+avg_CSP_sum_ASD = sum_csp_fsaverage
+avg_CSP_sum_ASD.data = X_avg
+avg_CSP_sum_ASD.save(savepath + '1_results/average_CSP_sum/' + 'ASD_avg_sum_CSP_1_6_old')
+
+avg_CSP_sum_group_diff = sum_csp_fsaverage
+avg_CSP_sum_group_diff.data = avg_CSP_sum_NT.data - avg_CSP_sum_ASD.data
+avg_CSP_sum_group_diff.save(savepath + '1_results/average_CSP_sum/' + 'NTvsASD_avg_sum_CSP_1_6_old')
