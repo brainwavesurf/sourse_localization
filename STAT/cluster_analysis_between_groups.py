@@ -99,7 +99,7 @@ df =  X1.shape[0] + X2.shape[0] - 2
 t_threshold = stats.distributions.t.ppf(1.-p_threshold/2, df)
 
 T_obs, clusters, cluster_p_values, H0 = clu =\
-     permutation_cluster_test (X, threshold=t_threshold, n_permutations=Nperm, stat_fun = stat_fun,  connectivity=connectivity, out_type='indices', n_jobs=1, tail=0)
+     permutation_cluster_test (X, threshold=None, n_permutations=Nperm, stat_fun = stat_fun,  connectivity=connectivity, out_type='indices', n_jobs=1, tail=0)
     # If threshold is None, it will choose a t-threshold equivalent to  p < 0.05 for the given number of (within-subject) observations.
 good_cluster_inds = np.where(cluster_p_values < 0.05)[0]
 
