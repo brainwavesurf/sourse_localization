@@ -41,6 +41,7 @@ for subject in SUBJECTS:
     
     original_data = mne.io.read_raw_fif(raw_fname, preload=False)
     original_info = original_data.info
+    original_info['sfreq'] = 500
     
     #for the first 3 CSP components and the second 3 CSP components (commented)
     diff = []
@@ -48,7 +49,7 @@ for subject in SUBJECTS:
     for num in CSP:
         
         #load csp data for fast from fieldtrip
-        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp_1_6_and_97_102_new_to_mne.mat'
+        ftname = savepath + subject + '/' + subject + '_fieldtrip_csp_1_6_and_97_102_old_to_mne.mat'
         fast_epo = mne.read_epochs_fieldtrip(ftname, original_info, data_name='epochs_fast'+num, trialinfo_column=0)
         fast_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif', overwrite=True)
         fast_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_fast.fif'
@@ -59,11 +60,6 @@ for subject in SUBJECTS:
         slow_epo.save(PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_slow.fif', overwrite=True)
         slow_fname = PATHfrom + 'SUBJECTS/' + subject + '/ICA_nonotch_crop/epochs/' + subject + '_epo_slow.fif'
         slow_epo = mne.read_epochs(slow_fname, proj=False, verbose=None) 
-        
-        if fast_epo.info['sfreq']>500:
-            fast_epo.resample(500)
-        if slow_epo.info['sfreq']>500:
-            slow_epo.resample(500)
             
         #inverse operator
         inverse_operator_fast = make_inverse_operator(fast_epo.info, fwd, noise_cov, loose=0.2, depth=0.8, verbose=True)
@@ -103,18 +99,17 @@ for subject in SUBJECTS:
         stc_slow.data = psd_avg
         
         #subtract slow from fast power 
-        stc_diff = stc_fast
-        
+        stc_diff = stc_fast        
         stc_diff.data = stc_fast.data - stc_slow.data
         #save
-        stc_diff.save(savepath + subject + '/' + subject + 'csp_V3-V1' + num)      
+        stc_diff.save(savepath + subject + '/' + subject + 'csp_V3-V1_old' + num)      
         diff.append(stc_diff.data)
         
     #sum and save
     diff_sum_1_6 = stc_slow
     diff_sum_1_6.data = sum(diff[0:6])
-    diff_sum_1_6.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_6_diff_V3-V1_new')
+    diff_sum_1_6.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_1_6_diff_V3-V1_old')
     
     diff_sum_97_102 = stc_fast
     diff_sum_97_102.data = sum(diff[6:12])
-    diff_sum_97_102.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_97_102_diff_V3-V1_new')
+    diff_sum_97_102.save(savepath + '1_results/CSP_sum/' + subject + 'sum_CSP_97_102_diff_V3-V1_old')
