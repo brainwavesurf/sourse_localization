@@ -38,7 +38,7 @@ src_fname = subjects_dir + 'fsaverage5' + '/bem/fsaverage5-ico-5p-src.fif'
 #read morphed stcs
 V1 = []
 V3 = []
-for subject in SUBJECTS:  
+for subject in SUBJ_NT:  
     # Load stc to in common cortical space (fsaverage)
     #load stcs
     stc_slow = mne.read_source_estimate(savepath + subject + '/' + subject + 'meg_slow_isi_2_40Hz')
@@ -49,8 +49,8 @@ for subject in SUBJECTS:
     stc_fsaverage_slow = morph.apply(stc_slow)
     stc_fsaverage_fast = morph.apply(stc_fast)
     
-    V1.append(stc_fsaverage_slow.data[:,6:13])    
-    V3.append(stc_fsaverage_fast.data[:,6:13])
+    V1.append(stc_fsaverage_slow.data[:,7:13])    
+    V3.append(stc_fsaverage_fast.data[:,7:13])
 
 V1 = np.mean(V1, axis=2)
 V1 = V1[:, :, np.newaxis]     
@@ -87,7 +87,7 @@ T_obs = np.mean(T_obs, 0)
 T_obs = T_obs.reshape(len(T_obs),1)
 Tstc = stc_fsaverage_slow
 Tstc.data = T_obs
-Tstc.save(savefolder + 'ALL_Tstat_V3vsV1_ave' + str(10) + '_' + str(17) + 'Hz')
+Tstc.save(savefolder + 'NT_Tstat_V3vsV1_ave' + str(11) + '_' + str(17) + 'Hz')
 
 
 #    Now let's build a convenient representation of each cluster, where each
@@ -98,4 +98,4 @@ if good_cluster_inds.shape[0]>0:
                                                   subject='fsaverage5')
     
     #save
-    stc_all_cluster_vis.save(savefolder + 'ALL_Clusters0.05_V3>V1_red_' + str(10) + '_' + str(17) + 'Hz')
+    stc_all_cluster_vis.save(savefolder + 'NT_Clusters0.05_V3>V1_red_' + str(11) + '_' + str(17) + 'Hz')
