@@ -53,7 +53,6 @@ if allepochs.info['sfreq']>500:
 #interstimulus epochs
 allepochs.crop(tmin=-0.8, tmax=0)
 slow_epo_isi = allepochs.__getitem__('V1')
-medium_epo_isi = allepochs.__getitem__('V2')
 fast_epo_isi = allepochs.__getitem__('V3')
 
 #load noise covariance matrix from empty room data
@@ -68,18 +67,14 @@ stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method
                             pick_ori="normal", return_generator=True)
 stcs_fast = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
                             pick_ori="normal", return_generator=True)
-# Now, we generate seed time series by averaging the activity in the left
-# visual corex
+# Now, we generate seed time series by averaging the activity in the left V1
 
 label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_V1_lh.label')
 src = inverse_operator['src']  # the source space used
 seed_ts_slow = mne.extract_label_time_course(stcs_slow, label, src, mode='mean_flip', verbose='error')
 seed_ts_fast = mne.extract_label_time_course(stcs_fast, label, src, mode='mean_flip', verbose='error')
 
-# Combine the seed time course with the source estimates. There will be a total
-# of 7500 signals:
-# index 0: time course extracted from label
-# index 1..7499: dSPM source space time courses
+# Combine the seed time course with the source estimates. 
 stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
                             pick_ori="normal", return_generator=True)
 stcs_fast = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
@@ -94,8 +89,7 @@ n_signals_tot = 1 + len(vertices[0]) + len(vertices[1])
 
 indices = seed_target_indices([0], np.arange(1, n_signals_tot))
 
-# Compute the PSI in the frequency range 10Hz-20Hz. We exclude the baseline
-# period from the connectivity estimation.
+# Compute the PSI in the frequency range 11Hz-17Hz.
 fmin = 11.
 fmax = 17.
 sfreq = slow_epo_isi.info['sfreq']  # the sampling frequency
@@ -116,5 +110,3 @@ psi_fast_stc = mne.SourceEstimate(psi_fast, vertices=vertices, tmin=-0.8, tstep=
 
 psi_slow_stc.save(savepath + subject + '/' + subject + '_psi_slow_isi')
 psi_fast_stc.save(savepath + subject + '/' + subject + '_psi_fast_isi')
-
-
