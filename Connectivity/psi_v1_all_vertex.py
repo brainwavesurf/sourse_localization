@@ -49,7 +49,7 @@ goodevents[:,2] = info_file
 
 # Define epochs 
 allepochs = mne.Epochs(raw, goodevents, events_id, tmin=presim_sec, tmax=poststim_sec, baseline=(None, 0), proj=False, preload=True)
-
+allepochs.save(savepath + subject + '/' + subject + '_')
 # Resample epochs
 if allepochs.info['sfreq']>500:
     allepochs.resample(500)
@@ -62,62 +62,64 @@ fast_epo_isi = allepochs.__getitem__('V3')
 snr = 1.0  # use lower SNR for single epochs
 lambda2 = 1.0 / snr ** 2   
 
-label_lh = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_V1_lh.label')
-label_rh = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_V1_rh.label')
+v1_label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_V1_lh.label')
+mt_label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_MT_lh.label')
 
-stcs_slow_lh = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
-                                 pick_ori="normal", label=label_lh)
-stcs_slow_rh = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
-                                 pick_ori="normal", label=label_rh)
+stcs_slow_v1 = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
+                                 pick_ori="normal", label=v1_label)
+stcs_slow_mt = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
+                                 pick_ori="normal", label=mt_label)
 
 src = inverse_operator['src']  # the source space used
-stc_label_lh = mne.stc_to_label(stcs_slow_lh[0], src=src, subjects_dir=subjects_dir, smooth=False)
-stc_label_rh = mne.stc_to_label(stcs_slow_rh[0], src=src, subjects_dir=subjects_dir, smooth=False)
+stc_label_v1 = mne.stc_to_label(stcs_slow_v1[0], src=src, subjects_dir=subjects_dir, smooth=False)
+stc_label_mt = mne.stc_to_label(stcs_slow_mt[0], src=src, subjects_dir=subjects_dir, smooth=False)
 
-vertices_lh = range(len(stc_label_lh[0].vertices))
-vertices_rh = range(len(stc_label_rh[1].vertices))
+vertices_v1 = range(len(stc_label_v1[0].vertices))
+vertices_mt = range(len(stc_label_mt[0].vertices))
 
-for vert_num in vertices_lh:
+for vert_num_v1 in vertices_v1:
     
     #one
     stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
                                 pick_ori="normal", return_generator=True)
 
     # Now, we generate seed time series from each vertex in the left V1
-    vertex = mne.label.select_sources('Case0102', label=stc_label_lh[0], location=vert_num, 
+    vertex_v1 = mne.label.select_sources('Case0102', label=stc_label_v1[0], location=vert_num_v1, 
                                       subjects_dir=subjects_dir)
     
-    seed_ts_slow = mne.extract_label_time_course(stcs_slow, vertex, src, mode='mean_flip',
+    seed_ts_slow_v1 = mne.extract_label_time_course(stcs_slow, vertex_v1, src, mode='mean_flip',
                                                 verbose='error')
     
-    # two
-    stcs_slow_2 = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
-                                pick_ori="normal", return_generator=False)
-
-    # Now, we generate seed time series from each vertex in the left V1
-    vertex_2 = mne.label.select_sources('Case0102', label=stc_label_lh[0], location=vert_num-1, 
-                                      subjects_dir=subjects_dir)
+    psi_slow_v1_mt = []
+    for vert_num_mt in vertices_mt:
+        
+        stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
+                                    pick_ori="normal", return_generator=False)
     
-    seed_ts_slow_2 = mne.extract_label_time_course(stcs_slow_2, vertex_2, src, mode='mean_flip',
-                                                verbose='error')
+        # Now, we generate seed time series from each vertex in the left V1
+        vertex_mt = mne.label.select_sources('Case0102', label=stc_label_mt[0], location=vert_num_mt, 
+                                          subjects_dir=subjects_dir)
+        
+        seed_ts_slow_mt = mne.extract_label_time_course(stcs_slow, vertex_mt, src, mode='mean_flip',
+                                                    verbose='error')
+        
+        # Combine the seed time course with the source estimates. 
+        comb_ts_slow = list(zip(seed_ts_slow_v1, seed_ts_slow_mt))
     
-    # Combine the seed time course with the source estimates. 
-    comb_ts_slow = list(zip(seed_ts_slow, seed_ts_slow_2))
-
-
-    # Construct indices to estimate connectivity between the label time course
-    # and all source space time courses
-    vertices = [src[i]['vertno'] for i in range(2)]
-
-    indices = (np.array([0]), np.array([1]))
-
-    # Compute the PSI in the frequency range 11Hz-17Hz.
-    fmin = 11.
-    fmax = 17.
-    sfreq = slow_epo_isi.info['sfreq']  # the sampling frequency
+        # Construct indices to estimate connectivity between the label time course
+        # and all source space time courses
+        vertices = [src[i]['vertno'] for i in range(2)]
     
-    psi_slow, freqs, times, n_epochs, _ = phase_slope_index(
-        comb_ts_slow, mode='fourier', sfreq=sfreq, indices=indices,
-        fmin=fmin, fmax=fmax)
-
+        indices = (np.array([0]), np.array([1]))
+    
+        # Compute the PSI in the frequency range 11Hz-17Hz.
+        fmin = 11.
+        fmax = 17.
+        sfreq = slow_epo_isi.info['sfreq']  # the sampling frequency
+        
+        psi_slow, freqs, times, n_epochs, _ = phase_slope_index(
+            comb_ts_slow, mode='fourier', sfreq=sfreq, indices=indices,
+            fmin=fmin, fmax=fmax)
+        psi_slow_v1_mt.append(psi_slow)
+    
 
