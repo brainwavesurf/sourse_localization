@@ -84,8 +84,9 @@ for subject in SUBJECTS:
     
 # Save   
 np.save(savepath + 'wpli2_debiased/' + 'all_v1_v4_avg_freq', avg_v1_v4)
-
-plt.plot(freqs, avg_v1_v4[0][0])
+all_subj = np.load(savepath + 'wpli2_debiased/' + 'all_v1_v4_avg_freq.npy')
+avg_subj = all_subj.mean(0)
+plt.plot(freqs, avg_subj[0])
 plt.title('wpli2_debiased between V1 and V4 averaged over all subjects')
 plt.plot(np.arange(42), np.zeros(42), 'r--')
 plt.ylabel('wpli2_debiased')
