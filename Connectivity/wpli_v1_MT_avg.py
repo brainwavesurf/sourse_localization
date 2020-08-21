@@ -119,5 +119,3 @@ time = stop - start
     wpli2, freqs, times, n_epochs, n_tapers = spectral_connectivity(
         stcs_slow, method='wpli2_debiased', sfreq=sfreq, indices=indices,
         mode='fourier', faverage=True, fmin=fmin, fmax=fmax, n_jobs=1)
-
-
