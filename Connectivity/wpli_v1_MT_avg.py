@@ -10,8 +10,8 @@ Created on Tue Jul 22 14:37:57 2020
 @author: a_shishkina
 """
 import mne
-from mne.minimum_norm import apply_inverse, read_inverse_operator, apply_inverse_epochs
-from mne.connectivity import spectral_connectivity, seed_target_indices
+from mne.minimum_norm import read_inverse_operator, apply_inverse_epochs
+from mne.connectivity import spectral_connectivity
 
 
 import matplotlib.pyplot as plt
@@ -42,7 +42,7 @@ for subject in SUBJECTS:
  
     allepochs = mne.read_epochs(savepath + subject + '/' + subject + '_isi-epo.fif')
     # Sort epochs according to experimental conditions in the post-stimulus interval
-    slow_epo_isi = allepochs.__getitem__('V1')
+    #slow_epo_isi = allepochs.__getitem__('V1')
     fast_epo_isi = allepochs.__getitem__('V3')
     
     fname_inv = savepath + subject + '/' + subject + '_inv'
@@ -56,66 +56,42 @@ for subject in SUBJECTS:
     mt_label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_MT_rh.label')
     
     # Compute inverse solution for each epochs 
-    stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
+    stcs_fast = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
                                         pick_ori="normal")
     
     # Extract time courses from vertices
     src = inverse_operator['src']  # the source space used
-    seed_ts_slow_v1 = mne.extract_label_time_course(stcs_slow_v1, v1_label, src, mode='mean_flip', verbose='error')
-    seed_ts_slow_mt = mne.extract_label_time_course(stcs_slow_mt, mt_label, src, mode='mean_flip', verbose='error')
+    seed_ts_fast_v1 = mne.extract_label_time_course(stcs_fast, v1_label, src, mode='mean_flip', verbose='error')
+    seed_ts_fast_mt = mne.extract_label_time_course(stcs_fast, mt_label, src, mode='mean_flip', verbose='error')
     
     # Combine two time courses 
-    comb_ts_slow = list(zip(seed_ts_slow_v1, seed_ts_slow_mt))
+    comb_ts_fast = list(zip(seed_ts_fast_v1, seed_ts_fast_mt))
     
     # Create indices for two label time courses
     indices = (np.array([0]), np.array([1]))
     
     # Compute the PSI in the frequency range 8Hz-17Hz.
-    fmin = 8.
-    fmax = 17.
-    sfreq = slow_epo_isi.info['sfreq']  # the sampling frequency
+    fmin = 2.
+    fmax = 40.
+    sfreq = fast_epo_isi.info['sfreq']  # the sampling frequency
     
     wpli2, freqs, times, n_epochs, n_tapers = spectral_connectivity(
-        comb_ts_slow, method='wpli2_debiased', sfreq=sfreq, indices=indices,
-        mode='fourier', faverage=True, fmin=fmin, fmax=fmax, n_jobs=1)
+        comb_ts_fast, method='wpli2_debiased', sfreq=sfreq, indices=indices,
+        mode='fourier', fmin=fmin, fmax=fmax, n_jobs=1)
     
     # Add wpli2 values for each subject
     avg_v1_mt.append(wpli2)
     
 # Save   
-np.save(savepath + 'wpli2_debiased/' + 'all_v1_mt_avg_rh_fast', avg_v1_mt)
+np.save(savepath + 'wpli2_debiased/' + 'all_v1_mt_avg_freq', avg_v1_mt)
 stop = timeit.default_timer()   
 time = stop - start 
 
-
-# Alternative way
-
-    # Compute inverse solution for averaged epochs 
-    slow_epo_isi_avg = slow_epo_isi.average()
-    stc_slow = apply_inverse(slow_epo_isi_avg, inverse_operator, lambda2, method='sLORETA',
-                             pick_ori="normal")
-    # Extract stc within specific label
-    stc_slow_v1 = stc_slow.in_label(v1_label)
-    stc_slow_mt = stc_slow.in_label(mt_label)
-    
-    # Find number and index of vertices
-    seed_vertno_v1 = stc_slow_v1.vertices[1]
-    seed_vertno_mt = stc_slow_mt.vertices[1]
-    
-    seed_idx_v1 = np.searchsorted(stc_slow_v1.vertices[1], seed_vertno_v1)
-    seed_idx_mt = np.searchsorted(stc_slow_mt.vertices[1], seed_vertno_mt)
-    
-    indices = seed_target_indices([seed_idx_mt],[seed_idx_v1])
-    
-    # Compute inverse solution for each epochs 
-    stcs_slow = apply_inverse_epochs(slow_epo_isi, inverse_operator, lambda2, method='sLORETA',
-                                        pick_ori="normal")
-  
-    # Compute the PSI in the frequency range 8Hz-17Hz.
-    fmin = 8.
-    fmax = 17.
-    sfreq = slow_epo_isi.info['sfreq']  # the sampling frequency
-    
-    wpli2, freqs, times, n_epochs, n_tapers = spectral_connectivity(
-        stcs_slow, method='wpli2_debiased', sfreq=sfreq, indices=indices,
-        mode='fourier', faverage=True, fmin=fmin, fmax=fmax, n_jobs=1)
+all_subj = np.load(savepath + 'wpli2_debiased/' + 'all_v1_mt_avg_freq.npy')
+avg_subj = all_subj.mean(0)
+plt.plot(freqs, avg_subj[0])
+plt.title('wpli2_debiased between V1 and MT averaged over all subjects')
+plt.plot(np.arange(42), np.zeros(42), 'r--')
+plt.ylabel('wpli2_debiased')
+plt.xlabel('frequency')
+plt.savefig(savepath + 'wpli2_debiased/' + 'all_v1_mt_avg')
