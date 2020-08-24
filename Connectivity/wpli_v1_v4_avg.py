@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# debiased estimator of squared wheighted phase lag index computation 
+# debiased estimator of squared weighted phase lag index computation 
 # between time courses averaged in V1 and V4 labels
 
 """
@@ -81,7 +81,7 @@ for subject in SUBJECTS:
     
     # Add wpli2 values for each subject
     avg_v1_v4.append(wpli2)
-    
+
 # Save   
 np.save(savepath + 'wpli2_debiased/' + 'all_v1_v4_avg_freq', avg_v1_v4)
 all_subj = np.load(savepath + 'wpli2_debiased/' + 'all_v1_v4_avg_freq.npy')
