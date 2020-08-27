@@ -37,7 +37,7 @@ for subject in SUBJECTS:
     allepochs = mne.read_epochs(savepath + subject + '/' + subject + '_isi-epo.fif')
     # Sort epochs according to experimental conditions in the post-stimulus interval
     #slow_epo_isi = allepochs.__getitem__('V1')
-    fast_epo_isi = allepochs.__getitem__('V3')
+    #fast_epo_isi = allepochs.__getitem__('V3')
     
     fname_inv = savepath + subject + '/' + subject + '_inv'
     inverse_operator = read_inverse_operator(fname_inv, verbose=None)
@@ -47,16 +47,16 @@ for subject in SUBJECTS:
     lambda2 = 1.0 / snr ** 2   
     
     # Source Estimates
-    stcs_fast = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
+    stcs_fast = apply_inverse_epochs(allepochs, inverse_operator, lambda2, method='sLORETA',
                                      pick_ori="normal")
     # Read labels
     v1_label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_V1_rh.label')
     mt_label = mne.read_label(datapath + 'Results_Alpha_and_Gamma/' + subject + '/' + subject + '_MT_rh.label')
     
     # Extract Source Estimates from labels
-    stcs_fast_v1 = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
+    stcs_fast_v1 = apply_inverse_epochs(allepochs, inverse_operator, lambda2, method='sLORETA',
                                      pick_ori="normal", label=v1_label)
-    stcs_fast_mt = apply_inverse_epochs(fast_epo_isi, inverse_operator, lambda2, method='sLORETA',
+    stcs_fast_mt = apply_inverse_epochs(allepochs, inverse_operator, lambda2, method='sLORETA',
                                      pick_ori="normal", label=mt_label)
     
     # Find index of vertices of interest in original stc
@@ -69,7 +69,7 @@ for subject in SUBJECTS:
     # Compute the WPLI2_debiased in the frequency range 
     fmin = 2.
     fmax = 40.
-    sfreq = fast_epo_isi.info['sfreq']  # the sampling frequency
+    sfreq = allepochs.info['sfreq']  # the sampling frequency
     
     wpli2, freqs, times, n_epochs, n_tapers = spectral_connectivity(
         stcs_fast, method='wpli2_debiased', sfreq=sfreq, indices=indices,
@@ -81,12 +81,12 @@ stop = timeit.default_timer()
 time = stop-start
 
 # Save   
-np.save(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast', all_v1_mt)
-all_subj = np.load(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast.npy')
+np.save(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast_allepo', all_v1_mt)
+all_subj = np.load(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast_allepo.npy')
 avg_subj = all_subj.mean(0)
 plt.plot(freqs, avg_subj)
 plt.title('wpli2_debiased between V1 and MT averaged over all subjects')
 plt.plot(np.arange(42), np.zeros(42), 'r--')
 plt.ylabel('wpli2_debiased')
 plt.xlabel('frequency')
-plt.savefig(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast')
+plt.savefig(savepath + 'wpli2_debiased/' + 'all_v1_mt_vertices_fast_allepo')
