@@ -163,38 +163,8 @@ plt.plot(c.frequencies, avg_subj_v1_mt_nt[0,:], label='v1->mt')
 plt.plot(c.frequencies, avg_subj_mt_v1_nt[0,:], label='mt->v1')
 plt.legend()
 plt.ylim(0,0.05)
-plt.xlim(2,70)
+plt.xlim(2,40)
 plt.title('nt')
 plt.ylabel('Granger Causaliy Value')
 plt.xlabel('frequency')
-plt.savefig(savepath + 'granger/' + 'all_v1_mt_nt_vert_2_70')
-
-
-
-
-
-# # Granger causality from v1 to mt
-#     granger_mt = []
-#     granger_v1_mt = []
-    
-#     for idx_v1 in range(len(stc_label_v1[1].vertices)):
-#         for idx_mt in range(len(stc_label_mt[1].vertices)):
-#             granger_mt.append(granger[...,idx_v1,idx_mt+len(stc_label_v1[1].vertices)])
-#             granger_mt_array = np.asarray(granger_mt)
-#         granger_v1_mt.append(granger_mt_array.mean(0))
-#     granger_v1_mt_array = np.asarray(granger_v1_mt)
-#     granger_all_v1_mt = granger_v1_mt_array.mean(0)
-    
-#     all_subj_v1_mt.append(granger_all_v1_mt)
-    
-#     # Granger causality from mt to v1
-#     granger_mt = []
-#     granger_v1_mt = []
-    
-#     for idx_v1 in range(len(stc_label_v1[1].vertices)):
-#         for idx_mt in range(len(stc_label_mt[1].vertices)):
-#             granger_mt.append(granger[...,idx_mt+len(stc_label_v1[1].vertices), idx_v1])
-#             granger_mt_array = np.asarray(granger_mt)
-#         granger_v1_mt.append(granger_mt_array.mean(0))
-#     granger_v1_mt_array = np.asarray(granger_v1_mt)
-#     granger_all_mt_v1 = granger_v1_mt_array.mean(0)
+plt.savefig(savepath + 'granger/' + 'all_v1_mt_nt_vert')
