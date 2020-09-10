@@ -1,5 +1,5 @@
 '''Case 1:
-    granger_all_v1_mt = granger_all_v1_mt
+    granger_all_v1_mt = granger_all_mt_v1
 '''
 granger_v1_mt_avg = granger_mt_v1_avg = np.empty((1,203,nvert_v1)) #(1,203,111)
     for idx_v1 in range(nvert_v1): 
@@ -23,7 +23,7 @@ granger_v1_mt_avg = granger_mt_v1_avg = np.empty((1,203,nvert_v1)) #(1,203,111)
     granger_all_mt_v1 = granger_mt_v1_avg.mean(2)
 
 '''Case 1:
-    granger_all_v1_mt != granger_all_v1_mt
+    granger_all_v1_mt != granger_all_mt_v1
 '''
 
 granger_v1_mt_avg = np.empty((1,203,nvert_v1)) #(1,203,111)
