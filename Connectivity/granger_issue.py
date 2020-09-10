@@ -22,7 +22,7 @@ granger_v1_mt_avg = granger_mt_v1_avg = np.empty((1,203,nvert_v1)) #(1,203,111)
     granger_all_v1_mt = granger_v1_mt_avg.mean(2) # (1,203) , where 203 is freqs
     granger_all_mt_v1 = granger_mt_v1_avg.mean(2)
 
-'''Case 1:
+'''Case 2:
     granger_all_v1_mt != granger_all_mt_v1
 '''
 
