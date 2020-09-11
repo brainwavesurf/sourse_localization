@@ -33,26 +33,30 @@ SUBJ_ASD = ['0106', '0107', '0139', '0141', '0159', '0160', '0161',
 
 SUBJECTS = SUBJ_ASD + SUBJ_NT
 
-all_subj_v1_mt_asd_slow = np.empty((1,203,len(SUBJECTS)))
-all_subj_v1_mt_asd_med = np.empty((1,203,len(SUBJECTS)))
-all_subj_v1_mt_asd_fast = np.empty((1,203,len(SUBJECTS)))
+all_subj_v1_mt_asd_slow = np.empty((1,203,len(SUBJ_ASD)))
+all_subj_v1_mt_asd_med = np.empty((1,203,len(SUBJ_ASD)))
+all_subj_v1_mt_asd_fast = np.empty((1,203,len(SUBJ_ASD)))
 
-all_subj_mt_v1_asd_slow = np.empty((1,203,len(SUBJECTS)))
-all_subj_mt_v1_asd_med = np.empty((1,203,len(SUBJECTS)))
-all_subj_mt_v1_asd_fast = np.empty((1,203,len(SUBJECTS)))
+all_subj_mt_v1_asd_slow = np.empty((1,203,len(SUBJ_ASD)))
+all_subj_mt_v1_asd_med = np.empty((1,203,len(SUBJ_ASD)))
+all_subj_mt_v1_asd_fast = np.empty((1,203,len(SUBJ_ASD)))
 
-all_subj_v1_mt_nt_slow = np.empty((1,203,len(SUBJECTS)))
-all_subj_v1_mt_nt_med = np.empty((1,203,len(SUBJECTS)))
-all_subj_v1_mt_nt_fast = np.empty((1,203,len(SUBJECTS)))
+all_subj_v1_mt_nt_slow = np.empty((1,203,len(SUBJ_NT)))
+all_subj_v1_mt_nt_med = np.empty((1,203,len(SUBJ_NT)))
+all_subj_v1_mt_nt_fast = np.empty((1,203,len(SUBJ_NT)))
 
-all_subj_mt_v1_nt_slow = np.empty((1,203,len(SUBJECTS)))
-all_subj_mt_v1_nt_med = np.empty((1,203,len(SUBJECTS)))
-all_subj_mt_v1_nt_fast = np.empty((1,203,len(SUBJECTS)))
+all_subj_mt_v1_nt_slow = np.empty((1,203,len(SUBJ_NT)))
+all_subj_mt_v1_nt_med = np.empty((1,203,len(SUBJ_NT)))
+all_subj_mt_v1_nt_fast = np.empty((1,203,len(SUBJ_NT)))
 
-
+idx_subj_asd = []
+idx_subj_nt = []
 for subject in SUBJECTS:
-    
-    idx_subj = SUBJECTS.index(subject)
+    if subject in SUBJ_ASD:
+        idx_subj_asd.append(SUBJECTS.index(subject))
+    else:
+        idx_subj_nt.append(SUBJECTS.index(subject))
+        
     allepochs = mne.read_epochs(savepath + subject + '/' + subject + '_stim-epo.fif')
     # Sort epochs according to experimental conditions in the post-stimulus interval
     slow_epo = allepochs.__getitem__('V1')
@@ -193,22 +197,24 @@ for subject in SUBJECTS:
 
     # Sort by group
     if subject in SUBJ_ASD:
-        all_subj_v1_mt_asd_slow[:,:,idx_subj] = granger_all_v1_mt_slow
-        all_subj_v1_mt_asd_med[:,:,idx_subj] = granger_all_v1_mt_med
-        all_subj_v1_mt_asd_fast[:,:,idx_subj] = granger_all_v1_mt_fast
+        idx_subj_asd = SUBJ_ASD.index(subject)
+        all_subj_v1_mt_asd_slow[:,:,idx_subj_asd] = granger_all_v1_mt_slow
+        all_subj_v1_mt_asd_med[:,:,idx_subj_asd] = granger_all_v1_mt_med
+        all_subj_v1_mt_asd_fast[:,:,idx_subj_asd] = granger_all_v1_mt_fast
         
-        all_subj_mt_v1_asd_slow[:,:,idx_subj] = granger_all_mt_v1_slow
-        all_subj_mt_v1_asd_med[:,:,idx_subj] = granger_all_mt_v1_med
-        all_subj_mt_v1_asd_fast[:,:,idx_subj] = granger_all_mt_v1_fast
+        all_subj_mt_v1_asd_slow[:,:,idx_subj_asd] = granger_all_mt_v1_slow
+        all_subj_mt_v1_asd_med[:,:,idx_subj_asd] = granger_all_mt_v1_med
+        all_subj_mt_v1_asd_fast[:,:,idx_subj_asd] = granger_all_mt_v1_fast
         
     else:
-        all_subj_v1_mt_nt_slow[:,:,idx_subj] = granger_all_v1_mt_slow
-        all_subj_v1_mt_nt_med[:,:,idx_subj] = granger_all_v1_mt_med
-        all_subj_v1_mt_nt_fast[:,:,idx_subj] = granger_all_v1_mt_fast
+        idx_subj_nt = SUBJ_NT.index(subject)
+        all_subj_v1_mt_nt_slow[:,:,idx_subj_nt] = granger_all_v1_mt_slow
+        all_subj_v1_mt_nt_med[:,:,idx_subj_nt] = granger_all_v1_mt_med
+        all_subj_v1_mt_nt_fast[:,:,idx_subj_nt] = granger_all_v1_mt_fast
         
-        all_subj_mt_v1_nt_slow[:,:,idx_subj] = granger_all_mt_v1_slow
-        all_subj_mt_v1_nt_med[:,:,idx_subj] = granger_all_mt_v1_med
-        all_subj_mt_v1_nt_fast[:,:,idx_subj] = granger_all_mt_v1_fast
+        all_subj_mt_v1_nt_slow[:,:,idx_subj_nt] = granger_all_mt_v1_slow
+        all_subj_mt_v1_nt_med[:,:,idx_subj_nt] = granger_all_mt_v1_med
+        all_subj_mt_v1_nt_fast[:,:,idx_subj_nt] = granger_all_mt_v1_fast
     
 np.save(savepath + 'granger/' + 'all_subj_v1_mt_asd_slow', all_subj_v1_mt_asd_slow)
 np.save(savepath + 'granger/' + 'all_subj_v1_mt_asd_med', all_subj_v1_mt_asd_med)
@@ -231,25 +237,31 @@ time = stop - start
 
 # Plot
 plt.plot(c_v1_mt_slow.frequencies, all_subj_v1_mt_nt_slow.mean(2)[0,:], label='v1->mt')
-plt.plot(c_v1_mt_slow.frequencies, granger_all_mt_v1[0,:], label='mt->v1')
+plt.plot(c_v1_mt_slow.frequencies, all_subj_mt_v1_nt_slow.mean(2)[0,:], label='mt->v1')
 plt.legend()
 plt.xlim(2,70)
-plt.title('nt')
+plt.title('nt_slow')
 plt.ylabel('Granger Causaliy Value')
 plt.xlabel('frequency')
-plt.savefig(savepath + 'granger/' + 'all_v1_mt_nt_vert')
+plt.savefig(savepath + 'granger/' + 'all_subj_v1_mt_nt_slow')
 
 # Compute the Directed Assimetry Index
-dai_nt = (avg_subj_v1_mt_nt - avg_subj_mt_v1_nt)/(avg_subj_v1_mt_nt + avg_subj_mt_v1_nt)
-dai_asd = (avg_subj_v1_mt_asd - avg_subj_mt_v1_asd)/(avg_subj_v1_mt_asd + avg_subj_mt_v1_asd)
+dai_nt_slow = (all_subj_v1_mt_nt_slow - all_subj_mt_v1_nt_slow)/(all_subj_v1_mt_nt_slow + all_subj_mt_v1_nt_slow)
+dai_asd_slow = (all_subj_v1_mt_asd_slow - all_subj_mt_v1_asd_slow)/(all_subj_v1_mt_asd_slow + all_subj_mt_v1_asd_slow)
+
+dai_nt_med = (all_subj_v1_mt_nt_med - all_subj_mt_v1_nt_med)/(all_subj_v1_mt_nt_med + all_subj_mt_v1_nt_med)
+dai_asd_med = (all_subj_v1_mt_asd_med - all_subj_mt_v1_asd_med)/(all_subj_v1_mt_asd_med + all_subj_mt_v1_asd_med)
+
+dai_nt_fast = (all_subj_v1_mt_nt_fast - all_subj_mt_v1_nt_fast)/(all_subj_v1_mt_nt_fast + all_subj_mt_v1_nt_fast)
+dai_asd_fast = (all_subj_v1_mt_asd_fast - all_subj_mt_v1_asd_fast)/(all_subj_v1_mt_asd_fast + all_subj_mt_v1_asd_fast)
 
 # Plot
-plt.plot(c.frequencies, dai_nt[0,:], label='nt')
-plt.plot(c.frequencies, dai_asd[0,:], label='asd')
-plt.plot(c.frequencies, np.zeros(len(c.frequencies)), 'k--')
+plt.plot(c_v1_mt_slow.frequencies, dai_nt_med.mean(2)[0,:], label='nt_med')
+plt.plot(c_v1_mt_slow.frequencies, dai_asd_med.mean(2)[0,:], label='asd_med')
+plt.plot(c_v1_mt_slow.frequencies, np.zeros(len(c_v1_mt_slow.frequencies)), 'k--')
 plt.legend()
-plt.xlim(2,40)
+plt.xlim(2,70)
 plt.title('Directed Asymmetry Index')
 plt.ylabel('DAI')
 plt.xlabel('frequency')
-plt.savefig(savepath + 'granger/' + 'v1_mt_dai')
+plt.savefig(savepath + 'granger/' + 'v1_mt_dai_med')
